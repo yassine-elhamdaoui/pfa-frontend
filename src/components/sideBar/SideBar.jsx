@@ -54,16 +54,22 @@ const HOBStuff = [
   { id: 7, text: "Requests", icon: <PersonAddAlt1Icon />, path: "/requests" },
   { id: 8, text: "Teams", icon: <PeopleAltIcon />, path: "/teams" },
   { id: 9, text: "Defenses", icon: <CoPresentIcon />, path: "/defenses" },
-];
-
-const forAll = [
   {
     id: 10,
     text: "Assignments",
     icon: <AssignmentIcon />,
     path: "/assignments",
   },
-  { id: 11, text: "Branch", icon: <SchoolIcon />, path: "/branch" },
+];
+
+const forAll = [
+  {
+    id: 11,
+    text: "Result",
+    icon: <AssignmentIcon />,
+    path: "/assignments/result",
+  },
+  { id: 12, text: "Branch", icon: <SchoolIcon />, path: "/branch" },
 ];
 // eslint-disable-next-line react/prop-types
 export default function SideBar({ mode, open, handleDrawerClose }) {
@@ -111,24 +117,26 @@ export default function SideBar({ mode, open, handleDrawerClose }) {
             },
           }}
         >
-          <List>
-            <ListSubheader>PROJECT</ListSubheader>
-            {studentStuff.map((item, index) => (
-              <ListItem key={index} disablePadding>
-                <ListItemButton
-                  sx={{ pl: 4, borderRadius: "4px" }}
-                  selected={selectedIndex === item.id}
-                  onClick={(event) => {
-                    handleListItemClick(event, item.id);
-                    navigate(item.path);
-                  }}
-                >
-                  <ListItemIcon>{item.icon}</ListItemIcon>
-                  <ListItemText sx={{ ml: -1.5 }} primary={item.text} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
+          {!isHOB ? (
+            <List>
+              <ListSubheader>PROJECT</ListSubheader>
+              {studentStuff.map((item, index) => (
+                <ListItem key={index} disablePadding>
+                  <ListItemButton
+                    sx={{ pl: 4, borderRadius: "4px" }}
+                    selected={selectedIndex === item.id}
+                    onClick={(event) => {
+                      handleListItemClick(event, item.id);
+                      navigate(item.path);
+                    }}
+                  >
+                    <ListItemIcon>{item.icon}</ListItemIcon>
+                    <ListItemText sx={{ ml: -1.5 }} primary={item.text} />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>):null
+          }
 
           {isSupervisor ? (
             <>

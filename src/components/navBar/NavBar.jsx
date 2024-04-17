@@ -26,6 +26,7 @@ import CreateProjectDialog from "../dialogs/CreateProjectDialog";
 import CreateTeamDialog from "../dialogs/CreateTeamDialog";
 import { NavLink } from "react-router-dom";
 import { hasRole } from "../../utils/userUtiles";
+import { stringAvatar } from "../../utils/generalUtils";
 
 // eslint-disable-next-line react/prop-types
 export default function NavBar({ handleDrawerOpen, setMode }) {
@@ -198,37 +199,6 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
     </Menu>
   );
 
-  function stringToColor(string) {
-    let hash = 0;
-    let i;
-
-    /* eslint-disable no-bitwise */
-    for (i = 0; i < string.length; i += 1) {
-      hash = string.charCodeAt(i) + ((hash << 5) - hash);
-    }
-
-    let color = "#";
-
-    for (i = 0; i < 3; i += 1) {
-      const value = (hash >> (i * 8)) & 0xff;
-      color += `00${value.toString(16)}`.slice(-2);
-    }
-    /* eslint-enable no-bitwise */
-
-    return color;
-  }
-
-  
-function stringAvatar(name) {
-  return {
-    sx: {
-      bgcolor: stringToColor(name),
-      width: 40,
-      height: 40,
-    },
-    children: `${name.split(" ")[0][0]}${name.split(" ")[1][0]}`.toUpperCase(),
-  };
-}
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -337,10 +307,11 @@ function stringAvatar(name) {
               onClick={handleProfileMenuOpen}
               color="inherit"
             >
-              <Avatar
-                {...stringAvatar(localStorage.getItem("name"))}
-                // sx={{ width: 40, height: 40 }}
-              />
+              {localStorage.getItem("name") ? (
+                <Avatar {...stringAvatar(localStorage.getItem("name"))} />
+              ) : (
+                <AccountCircle />
+              )}
             </IconButton>
           </Box>
           <Box sx={{ display: { xs: "flex", md: "none" } }}>
