@@ -337,10 +337,11 @@ function stringAvatar(name) {
               onClick={handleProfileMenuOpen}
               color="inherit"
             >
-              <Avatar
-                {...stringAvatar(localStorage.getItem("name"))}
-                // sx={{ width: 40, height: 40 }}
-              />
+              {localStorage.getItem("name") ? (
+                <Avatar {...stringAvatar(localStorage.getItem("name"))} />
+              ) : (
+                <AccountCircle />
+              )}
             </IconButton>
           </Box>
           <Box sx={{ display: { xs: "flex", md: "none" } }}>
