@@ -29,6 +29,8 @@ const authenticate = async (
         if (user.email === email) {
           localStorage.setItem("email", user.email);
           localStorage.setItem("userId", user.id);
+          localStorage.setItem("branchId", user.branchId);
+          localStorage.setItem("studiedBranchId", user.studiedBranchId);
           localStorage.setItem("team", user.teamId);
           localStorage.setItem("authorities", JSON.stringify(user.authorities));
           localStorage.setItem("name", user.firstName + " "+user.lastName);

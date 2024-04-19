@@ -26,6 +26,7 @@ import CreateProjectDialog from "../dialogs/CreateProjectDialog";
 import CreateTeamDialog from "../dialogs/CreateTeamDialog";
 import { NavLink } from "react-router-dom";
 import { hasRole } from "../../utils/userUtiles";
+import { stringAvatar } from "../../utils/generalUtils";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 
@@ -232,7 +233,6 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
   }
 
 
-
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="fixed" open={open}>
@@ -341,6 +341,7 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
               color="inherit"
             >
               {localStorage.getItem("name") ? (
+
                 <Avatar {...stringAvatarByFullName(localStorage.getItem("name"))} />
               ) : (
                 <AccountCircle />

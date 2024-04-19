@@ -4,15 +4,32 @@
   box-sizing: border-box;
   
 }
-body{
+body {
   font-family: 'Roboto', sans-serif;
-  min-height: 100svh;
-  #root{
+  min-height: 100vh;
+  overflow-y: auto; // Enable vertical scrollbar
+
+  #root {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    min-height: 100vh;
+  }
+
+  &::-webkit-scrollbar {
+    width: 5px; // Set the width of the scrollbar
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2); // Set the color of the scrollbar thumb
+    border-radius: 10px; // Set the border radius of the scrollbar thumb
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: transparent; // Make the scrollbar track transparent
   }
 }
+
+
 a{
   text-decoration: none;
   color: #1976d2;

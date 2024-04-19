@@ -24,6 +24,7 @@ import Teams from "./pages/teams/Teams";
 import Preferences from "./pages/preferences/Preferences";
 import TeamLayout from "./layouts/TeamLayout";
 import Defense from "./pages/defense/Defense";
+import AssignmentsResult from "./pages/assignmentsResult/AssignmentsResult";
 
 
 function App() {
@@ -50,7 +51,7 @@ function App() {
               <Route path="board" element={<Board />} />
               <Route path="reports" element={<Reports />} />
               <Route path="settings" element={<Settings />} />
-              <Route path="team" element={<TeamLayout />}>
+              <Route path="team/:id" element={<TeamLayout />}>
                 <Route index element={<Team />} />
                 <Route path="preferences" element={<Preferences />} />
               </Route>
@@ -60,7 +61,8 @@ function App() {
             <Route path="projects/:id" element={<ProjectDetails />} />
             {/* end */}
             {/* for every one */}
-            <Route path="assignments" element={<Assignments />} />
+            <Route path="assignments" element={<Assignments mode={mode}/>} />
+            <Route path="assignments/result" element={<AssignmentsResult mode={mode}/>} />
             <Route path="teams" element={<Teams />} />
             <Route path="branch" element={<Branch />} />
             {/* end */}

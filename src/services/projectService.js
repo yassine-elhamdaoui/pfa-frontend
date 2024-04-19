@@ -1,0 +1,110 @@
+export const getAllProjects = async (token) => {
+    const projects = await fetch("http://localhost:8080/api/projects", {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+        },
+    })
+        .then((response) => response.json())
+        .catch((error) => {
+            console.error("Error fetching data:", error);
+            throw error;
+        }
+    );
+    return projects;
+}
+export const getAllPreferences = async (token) => {
+    const preferences = await fetch("http://localhost:8080/api/projects/preferences", {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+        },
+    })
+    if (preferences.ok) {
+        return await preferences.json();
+    } else {
+        throw new Error("Failed to fetch preferences");
+    }
+}
+
+export const makeAssignment = async (
+  token,
+  setSnackbarOpen,
+  setSnackbarMessage,
+  setAssignmentLoading
+) => {
+  const response = await fetch("http://localhost:8080/api/projects/assign", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  try {
+    if (response.ok) {
+      setSnackbarMessage((await response.json()).message);
+      setSnackbarOpen(true);
+      setAssignmentLoading(false);
+      return response;
+    } else {
+      throw new Error("Error during assignment");
+    }
+  } catch (error) {
+    setSnackbarMessage("Error during assignment");
+    setSnackbarOpen(true);
+    setAssignmentLoading(false);
+    console.error("Error during assignment:", error);
+    throw error;
+  }
+};
+
+export const getAssignment = async (token) => {
+  console.log(new Date().getFullYear());
+  const assignment = await fetch(
+    `http://localhost:8080/api/assignments?year=${new Date().getFullYear()}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (assignment.ok) {
+    return await assignment.json();
+  }else{
+    return {};
+  }
+};
+
+export const validateAssignments = async (
+  token,
+  setSnackbarOpen,
+  setSnackbarMessage,
+  setAssignmentLoading
+) => {
+  const response = await fetch(
+    `http://localhost:8080/api/projects/assign/validate`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  if (response.ok) {
+    setSnackbarMessage((await response.json()).message);
+    setSnackbarOpen(true);
+    setAssignmentLoading(false);
+    return await response.json();
+  } else {
+        setSnackbarMessage("Error during assignment");
+        setSnackbarOpen(true);
+        setAssignmentLoading(false);
+    return {};
+  }
+};
