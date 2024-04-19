@@ -26,7 +26,10 @@ import CreateProjectDialog from "../dialogs/CreateProjectDialog";
 import CreateTeamDialog from "../dialogs/CreateTeamDialog";
 import { NavLink } from "react-router-dom";
 import { hasRole } from "../../utils/userUtiles";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
 import { stringAvatar } from "../../utils/generalUtils";
+
 
 // eslint-disable-next-line react/prop-types
 export default function NavBar({ handleDrawerOpen, setMode }) {
@@ -36,6 +39,12 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [anchorEl2, setAnchorEl2] = useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
+
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState("");
+    const handleSnackbarClose = () => {
+      setSnackbarOpen(false);
+    };
 
   const isMenuOpen = Boolean(anchorEl);
   const isModeMenuOpen = Boolean(anchorEl2);
@@ -334,11 +343,33 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
       <CreateProjectDialog
         projectDialogOpen={projectDialogOpen}
         handleModalClose={handleModalClose}
+        setSnackbarOpen={setSnackbarOpen}
+        setSnackbarMessage={setSnackbarMessage}
       />
       <CreateTeamDialog
         teamDialogOpen={teamDialogOpen}
         handleModalClose={handleModalClose}
+        setSnackbarOpen={setSnackbarOpen}
+        setSnackbarMessage={setSnackbarMessage}
       />
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={
+            snackbarMessage && snackbarMessage.includes("success")
+              ? "success"
+              : "error"
+          }
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

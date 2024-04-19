@@ -1,3 +1,22 @@
+export default async function createProject(token, data, setSnackbarOpen, setSnackbarMessage) {
+  const response = await fetch("http://localhost:8080/api/projects", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: data,
+  });
+  if (response.ok) {
+    setSnackbarMessage("Project created successfully");
+    setSnackbarOpen(true);
+    return await response.json();
+  } else {
+    console.log(await response.json());
+    setSnackbarMessage("Failed to create project");
+    setSnackbarOpen(true);
+    return await response.json();
+  }
+} 
 export const getAllProjects = async (token) => {
     const projects = await fetch("http://localhost:8080/api/projects", {
         method: "GET",
