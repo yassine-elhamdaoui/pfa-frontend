@@ -18,6 +18,7 @@ import {
   Avatar,
 } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
+import CloseIcon from "@mui/icons-material/Close";
 import { getUsers } from "../../services/userService";
 import createProject from "../../services/projectService";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
@@ -274,7 +275,19 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
         },
       }}
     >
-      <DialogTitle>Create Project</DialogTitle>
+      <DialogTitle>
+        {" "}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Typography variant="h6">Create Team</Typography>
+          <CloseIcon style={{ cursor: "pointer" }} onClick={handleModalClose} />
+        </div>
+      </DialogTitle>
       <DialogContentText
         id="alert-dialog-slide-description"
         sx={{ marginLeft: "25px" }}

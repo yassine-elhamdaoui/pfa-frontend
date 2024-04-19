@@ -15,6 +15,7 @@ import { createTeam } from "../../services/teamService"; // Import de la fonctio
 import { useState } from "react";
 import Avatar from "@mui/material/Avatar";
 import CloseIcon from "@mui/icons-material/Close";
+import { stringAvatar } from "../../utils/generalUtils";
 
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="down" ref={ref} {...props} />;
@@ -45,7 +46,7 @@ function CreateTeamDialog({ teamDialogOpen, handleModalClose ,setSnackbarOpen, s
             user.email !== localStorage.getItem("email") &&
             !user.teamId &&
             user.authorities.some(
-              (authority) => authority.authority === "ROLE_USER"
+              (authority) => authority.authority === "ROLE_STUDENT"
             )
         );
 
@@ -90,30 +91,6 @@ function CreateTeamDialog({ teamDialogOpen, handleModalClose ,setSnackbarOpen, s
       console.error("Erreur lors de la création de l'équipe :", error);
     }
   };
-
-  function stringToColor(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const color = Math.floor(
-      Math.abs(((Math.sin(hash) * 10000) % 1) * 16777216)
-    ).toString(16);
-    return "#" + Array(6 - color.length + 1).join("0") + color;
-  }
-
-  function stringAvatarByFullName(fullName) {
-    return {
-      sx: {
-        bgcolor: stringToColor(fullName), // Utilisez le nom complet pour définir la couleur de fond
-        width: 40,
-        height: 40,
-      },
-      children: `${fullName.split(" ")[0][0]}${
-        fullName.split(" ")[1][0]
-      }`.toUpperCase(), // Utilisez les initiales du prénom et du nom de famille pour l'avatar
-    };
-  }
 
   return (
     <Dialog
@@ -190,7 +167,7 @@ function CreateTeamDialog({ teamDialogOpen, handleModalClose ,setSnackbarOpen, s
               <li {...props}>
                 <div style={{ display: "flex", alignItems: "center" ,gap:"10px"}}>
                   <Avatar
-                    {...stringAvatarByFullName(
+                    {...stringAvatar(
                      `${option.firstName} ${option.lastName}`
                     )}
                   />

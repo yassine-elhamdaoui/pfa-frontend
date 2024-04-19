@@ -52,11 +52,13 @@ export default function Register() {
     setLoading(true);
     const data = new FormData(event.currentTarget);
     const jsonData = {};
-    if (userType === "student") {
+    if (userType === "ROLE_STUDENT") {
       data.set("studiedBranch", data.get("branch"));
+      data.set("role", "ROLE_STUDENT");
       data.delete("branch");
-    } else if (userType === "supervisor") {
+    } else if (userType === "ROLE_SUPERVISOR") {
       data.set("branch", data.get("branch"));
+      data.set("role", "ROLE_SUPERVISOR");
       data.delete("studiedBranch");
     }
 
@@ -123,7 +125,7 @@ export default function Register() {
                 label="Inscription N°"
                 name="inscriptionNumber"
                 autoComplete="inscription"
-                disabled={userType !== "student"}
+                disabled={userType !== "ROLE_STUDENT"}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -165,9 +167,9 @@ export default function Register() {
                 value={userType}
                 onChange={handleUserTypeChange}
               >
-                <MenuItem value="student">Student</MenuItem>
-                <MenuItem value="supervisor">Supervisor</MenuItem>
-                <MenuItem value="headOfBranch">Head of Branch</MenuItem>
+                <MenuItem value="ROLE_STUDENT">Student</MenuItem>
+                <MenuItem value="ROLE_SUPERVISOR">Supervisor</MenuItem>
+                {/* <MenuItem value="ROLE_HEAD_OF_BRANCH">Head of Branch</MenuItem> */}
               </Select>
             </Grid>
             <Grid item xs={6}>

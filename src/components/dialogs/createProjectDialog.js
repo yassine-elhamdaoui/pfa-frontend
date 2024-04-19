@@ -3,7 +3,6 @@ import { styled } from "@mui/system";
 
 export const StyledDialog = styled(Dialog)(() => ({
   "& .css-1qxadfk-MuiPaper-root-MuiDialog-paper": {
-    height: "100svh",
     "&::-webkit-scrollbar": {
       width: "5px",
       height: "5px",
