@@ -29,6 +29,9 @@ import { hasRole } from "../../utils/userUtiles";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import { stringAvatar } from "../../utils/generalUtils";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
+
 
 
 // eslint-disable-next-line react/prop-types
@@ -208,6 +211,30 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
     </Menu>
   );
 
+  function stringToColor(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const color = Math.floor(
+      Math.abs(((Math.sin(hash) * 10000) % 1) * 16777216)
+    ).toString(16);
+    return "#" + Array(6 - color.length + 1).join("0") + color;
+  }
+
+  function stringAvatarByFullName(fullName) {
+    return {
+      sx: {
+        bgcolor: stringToColor(fullName), // Utilisez le nom complet pour définir la couleur de fond
+        width: 40,
+        height: 40,
+      },
+      children: `${fullName.split(" ")[0][0]}${
+        fullName.split(" ")[1][0]
+      }`.toUpperCase(), // Utilisez les initiales du prénom et du nom de famille pour l'avatar
+    };
+  }
+
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -317,7 +344,8 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
               color="inherit"
             >
               {localStorage.getItem("name") ? (
-                <Avatar {...stringAvatar(localStorage.getItem("name"))} />
+
+                <Avatar {...stringAvatarByFullName(localStorage.getItem("name"))} />
               ) : (
                 <AccountCircle />
               )}
