@@ -27,6 +27,9 @@ import CreateTeamDialog from "../dialogs/CreateTeamDialog";
 import { NavLink } from "react-router-dom";
 import { hasRole } from "../../utils/userUtiles";
 import { stringAvatar } from "../../utils/generalUtils";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
+
 
 // eslint-disable-next-line react/prop-types
 export default function NavBar({ handleDrawerOpen, setMode }) {
@@ -36,6 +39,12 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [anchorEl2, setAnchorEl2] = useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
+
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState("");
+    const handleSnackbarClose = () => {
+      setSnackbarOpen(false);
+    };
 
   const isMenuOpen = Boolean(anchorEl);
   const isModeMenuOpen = Boolean(anchorEl2);
@@ -199,6 +208,30 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
     </Menu>
   );
 
+  function stringToColor(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const color = Math.floor(
+      Math.abs(((Math.sin(hash) * 10000) % 1) * 16777216)
+    ).toString(16);
+    return "#" + Array(6 - color.length + 1).join("0") + color;
+  }
+
+  function stringAvatarByFullName(fullName) {
+    return {
+      sx: {
+        bgcolor: stringToColor(fullName), // Utilisez le nom complet pour définir la couleur de fond
+        width: 40,
+        height: 40,
+      },
+      children: `${fullName.split(" ")[0][0]}${
+        fullName.split(" ")[1][0]
+      }`.toUpperCase(), // Utilisez les initiales du prénom et du nom de famille pour l'avatar
+    };
+  }
+
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -308,7 +341,8 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
               color="inherit"
             >
               {localStorage.getItem("name") ? (
-                <Avatar {...stringAvatar(localStorage.getItem("name"))} />
+
+                <Avatar {...stringAvatarByFullName(localStorage.getItem("name"))} />
               ) : (
                 <AccountCircle />
               )}
@@ -334,11 +368,33 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
       <CreateProjectDialog
         projectDialogOpen={projectDialogOpen}
         handleModalClose={handleModalClose}
+        setSnackbarOpen={setSnackbarOpen}
+        setSnackbarMessage={setSnackbarMessage}
       />
       <CreateTeamDialog
         teamDialogOpen={teamDialogOpen}
         handleModalClose={handleModalClose}
+        setSnackbarOpen={setSnackbarOpen}
+        setSnackbarMessage={setSnackbarMessage}
       />
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={
+            snackbarMessage && snackbarMessage.includes("success")
+              ? "success"
+              : "error"
+          }
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
