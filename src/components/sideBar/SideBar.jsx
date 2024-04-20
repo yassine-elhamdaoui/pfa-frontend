@@ -70,6 +70,7 @@ const forAll = [
     path: "/assignments/result",
   },
   { id: 12, text: "Branch", icon: <SchoolIcon />, path: "/branch" },
+  { id: 13, text: "Projects", icon: <FolderCopyIcon />, path: "/projects" }
 ];
 // eslint-disable-next-line react/prop-types
 export default function SideBar({ mode, open, handleDrawerClose }) {
