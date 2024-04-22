@@ -51,6 +51,11 @@ function App() {
               <Route path="board" element={<Board />} />
               <Route path="reports" element={<Reports />} />
               <Route path="settings" element={<Settings />} />
+
+
+              <Route  path="team" Component={<Team/>}/>
+
+
               <Route path="team/:id" element={<TeamLayout />}>
                 <Route index element={<Team />} />
                 <Route path="preferences" element={<Preferences />} />

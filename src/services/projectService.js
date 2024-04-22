@@ -1,3 +1,5 @@
+import { json } from "react-router-dom";
+
 export default async function createProject(token, data, setSnackbarOpen, setSnackbarMessage) {
   const response = await fetch("http://localhost:8080/api/projects", {
     method: "POST",
@@ -33,6 +35,32 @@ export const getAllProjects = async (token) => {
     );
     return projects;
 }
+
+
+export const getProjectName = async (token, projectId) => {
+    try {
+        const response = await fetch(`http://localhost:8080/api/projects/${projectId}`, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch project');
+        }
+
+        const project = await response.json();
+        return project.title; // assuming the response JSON contains a title field
+    } catch (error) {
+        console.error("Error fetching project title:", error);
+        return 'Project title unavailable'; // Provide a default or error-specific return value
+    }
+
+}
+
+
 export const getAllPreferences = async (token) => {
     const preferences = await fetch("http://localhost:8080/api/projects/preferences", {
         method: "GET",
@@ -41,12 +69,19 @@ export const getAllPreferences = async (token) => {
             "Content-Type": "application/json",
         },
     })
+   try{
     if (preferences.ok) {
         return await preferences.json();
+        return preferences
     } else {
         throw new Error("Failed to fetch preferences");
     }
+   }
+   catch(error){
+      console.error("errrrror",token)
+   }
 }
+
 
 export const makeAssignment = async (
   token,

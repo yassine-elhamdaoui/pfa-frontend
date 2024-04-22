@@ -38,7 +38,7 @@ const studentStuff = [
     icon: <QueryStatsIcon />,
     path: "/project/reports",
   },
-  { id: 3, text: "Team", icon: <PeopleAltIcon />, path: "/project/team" },
+  { id: 3, text: "Team", icon: <PeopleAltIcon />, path: `/project/team/${localStorage.getItem("team")}` },
   {
     id: 4,
     text: "settings",
