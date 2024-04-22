@@ -284,7 +284,7 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
             justifyContent: "space-between",
           }}
         >
-          <Typography variant="h6">Create Team</Typography>
+          <Typography variant="h6">Create Project</Typography>
           <CloseIcon style={{ cursor: "pointer" }} onClick={handleModalClose} />
         </div>
       </DialogTitle>

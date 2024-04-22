@@ -30,8 +30,6 @@ import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import { stringAvatar } from "../../utils/generalUtils";
 
-
-
 // eslint-disable-next-line react/prop-types
 export default function NavBar({ handleDrawerOpen, setMode }) {
   const theme = useTheme();
@@ -54,7 +52,6 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
   const haveTeam = localStorage.getItem("team") != "null";
 
   const isSupervisor = hasRole("ROLE_SUPERVISOR");
-  console.log(isSupervisor);
   const isStudent = hasRole("ROLE_STUDENT");
 
   const handleAddTeamButtonClicked = () => {
@@ -256,7 +253,7 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
               Create Team
             </Button>
           ) : null}
-          
+
           {isSupervisor ? (
             <Button
               variant="outlined"
@@ -292,7 +289,7 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
             </Tooltip>
           ) : null}
 
-          <Box sx={{ display: { xs: "none", md: "flex" } }}>
+          <Box sx={{ display: { xs: "none", md: "flex" } ,alignItems:"center"}}>
             <IconButton
               size="large"
               aria-label="show 4 new mails"
