@@ -29,6 +29,7 @@ import { StyledDrawer, DrawerHeader } from "./sideBar";
 import { useState } from "react";
 import { hasRole } from "../../utils/userUtiles";
 
+
 const studentStuff = [
   { id: 0, text: "BackLog", icon: <SubjectIcon />, path: "/project/backlog" },
   { id: 1, text: "Board", icon: <ViewWeekIcon />, path: "/project/board" },
@@ -38,7 +39,7 @@ const studentStuff = [
     icon: <QueryStatsIcon />,
     path: "/project/reports",
   },
-  { id: 3, text: "Team", icon: <PeopleAltIcon />, path: "/project/team" },
+  { id: 3, text: "Team", icon: <PeopleAltIcon />, path: `/project/team/${localStorage.getItem("team")}` },
   {
     id: 4,
     text: "settings",

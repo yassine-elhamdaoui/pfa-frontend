@@ -25,7 +25,7 @@ import Preferences from "./pages/preferences/Preferences";
 import TeamLayout from "./layouts/TeamLayout";
 import Defense from "./pages/defense/Defense";
 import AssignmentsResult from "./pages/assignmentsResult/AssignmentsResult";
-
+import MakePreferences from "./pages/preferences/MakePreferences"
 
 function App() {
   const [mode , setMode] = useState(localStorage.getItem("mode") || "light");
@@ -54,6 +54,7 @@ function App() {
               <Route path="team/:id" element={<TeamLayout />}>
                 <Route index element={<Team />} />
                 <Route path="preferences" element={<Preferences />} />
+                <Route path="makepreferences" element={<MakePreferences />} />
               </Route>
             </Route>
             {/* this one is for the supervisor */}
