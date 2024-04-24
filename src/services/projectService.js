@@ -17,20 +17,33 @@ export default async function createProject(token, data, setSnackbarOpen, setSna
     return await response.json();
   }
 } 
-export const getAllProjects = async (token) => {
-    const projects = await fetch("http://localhost:8080/api/projects", {
+export const getAllProjects = async (token,years) => {
+    let academicYear = years;
+    if (academicYear === undefined) {
+          const year = new Date().getFullYear();
+          const month = new Date().getMonth();
+          if (month >= 9 && month <= 12) {
+            academicYear = `${year}/${year + 1}`;
+          } else if (month >= 1 && month <= 7) {
+            academicYear = `${year - 1}/${year}`;
+          }
+    }
+    console.log(academicYear);
+    const projects = await fetch(
+      `http://localhost:8080/api/projects?academicYear=${academicYear}`,
+      {
         method: "GET",
         headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-    })
-        .then((response) => response.json())
-        .catch((error) => {
-            console.error("Error fetching data:", error);
-            throw error;
-        }
-    );
+      }
+    )
+      .then((response) => response.json())
+      .catch((error) => {
+        console.error("Error fetching data:", error);
+        throw error;
+      });
     return projects;
 }
 export const getAllPreferences = async (token) => {
@@ -127,3 +140,45 @@ export const validateAssignments = async (
     return {};
   }
 };
+
+export const acceptProject = async (token, projectId,setSnackbarOpen,setSnackbarMessage,setConfirmLoading) => {
+  const response = await fetch(
+    `http://localhost:8080/api/projects/${projectId}/accept`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  if (response.ok) {
+    setSnackbarMessage("Project accepted successfully");
+    setSnackbarOpen(true);
+    setConfirmLoading(false);
+    return await response.json();
+  } else {
+    setSnackbarMessage("Error accepting project");
+    setSnackbarOpen(true);
+    setConfirmLoading(false);
+    throw new Error("Error accepting project");
+  }
+}
+
+export const rejectProject = async (token, projectId) => {
+  const response = await fetch(
+    `http://localhost:8080/api/projects/${projectId}/reject`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  if (response.ok) {
+    return await response.json();
+  } else {
+    throw new Error("Error rejecting project");
+  }
+}

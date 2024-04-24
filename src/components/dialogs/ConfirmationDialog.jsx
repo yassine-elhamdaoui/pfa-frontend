@@ -43,7 +43,7 @@ export default function ConfirmationDialog({
         <LoadingButton
           loading={loading}
           sx={{marginLeft:"15px" , marginRight:"15px"}}
-          loadingIndicator="Assigning…"
+          loadingIndicator="Loading..."
           variant="contained"
           onClick={onConfirmDialogConfirm}
           autoFocus

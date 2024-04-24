@@ -32,6 +32,7 @@ const lightColors = [
    "rgba(255, 204, 153, 0.5)",
    "rgba(255, 182, 193, 0.5)",
 ];
+
 const chipStyles = {};
 for (let i = 0; i < 20; i++) {
   chipStyles[
