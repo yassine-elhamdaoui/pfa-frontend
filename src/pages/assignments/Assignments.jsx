@@ -19,6 +19,7 @@ import { hasRole } from "../../utils/userUtiles";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import ConfirmationDialog from "../../components/dialogs/ConfirmationDialog";
 import { stringAvatar } from "../../utils/generalUtils";
+import BreadCrumb from "../../components/breadCrumb/BreadCrumb";
 
 
 const token = localStorage.getItem("token");
@@ -215,7 +216,10 @@ function Assignments({ mode }) {
             justifyContent: "space-between",
           }}
         >
-          <h2>Assignments</h2>
+          <BreadCrumb items={[
+              { label: "Home", href: "/" },
+              { label: "Assignments", href: "/assignments" }
+            ]} />
               {teamsWithoutPreferences.length === 0 &&
               Object.keys(assignment).length === 0 ? (
                 <Button
@@ -270,11 +274,17 @@ function Assignments({ mode }) {
         />
       </div>
     ) : (
+      <>
+        <BreadCrumb items={[
+              { label: "Home", href: "/" },
+              { label: "Assignments", href: "/assignments" }
+            ]} />
       <PlaceHolder
         icon={ErrorOutlineIcon}
         title="No Teams Found"
         message="There are no teams to assign to"
       />
+      </>
     )
   ) : (
     <PlaceHolder

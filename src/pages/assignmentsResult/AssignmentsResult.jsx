@@ -15,6 +15,7 @@ import { getAllTeams } from "../../services/teamService";
 import { hasRole } from "../../utils/userUtiles";
 import ConfirmationDialog from "../../components/dialogs/ConfirmationDialog";
 import { Button } from "@mui/material";
+import BreadCrumb from "../../components/breadCrumb/BreadCrumb";
 
 const token = localStorage.getItem("token");
 const isHOB = hasRole("ROLE_HEAD_OF_BRANCH");
@@ -52,7 +53,7 @@ function AssignmentsResult({ mode }) {
     const fetchData = async () => {
       try {
         const fetchedTeams = await getAllTeams(token);
-        const fetchedProjects = await getAllProjects(token);
+        const fetchedProjects = await getAllProjects(token,undefined,50);
         const fetchedAssignmentsResult = await getAllPreferences(token);
         const fetchedAssignment = await getAssignment(token);
         console.log(fetchedAssignment);
@@ -152,12 +153,15 @@ function AssignmentsResult({ mode }) {
           justifyContent: "space-between",
         }}
       >
-        <h2>Result</h2>
+        <BreadCrumb
+          items={[
+            { label: "Home", href: "/" },
+            { label: "Assignments", href: "/assignments" },
+            { label: "Result", href: "/result" },
+          ]}
+        />
         {assignment && assignment.completed === false && isHOB ? (
-          <Button
-            variant="outlined"
-            onClick={handleMakeAssignment}
-          >
+          <Button variant="outlined" onClick={handleMakeAssignment}>
             Validate
           </Button>
         ) : null}
@@ -193,11 +197,20 @@ function AssignmentsResult({ mode }) {
       />
     </div>
   ) : (
-    <PlaceHolder
-      icon={AssignmentLateIcon}
-      title="No assignments"
-      message="No assignments have been made yet."
-    />
+    <>
+      <BreadCrumb
+        items={[
+          { label: "Home", href: "/" },
+          { label: "Assignments", href: "/assignments" },
+          { label: "Result", href: "/result" },
+        ]}
+      />
+      <PlaceHolder
+        icon={AssignmentLateIcon}
+        title="No assignments"
+        message="No assignments have been made yet."
+      />
+    </>
   );
 }
 

@@ -1,5 +1,16 @@
+import AssignmentIcon from "@mui/icons-material/Assignment";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import CoPresentIcon from "@mui/icons-material/CoPresent";
+import FolderCopyIcon from "@mui/icons-material/FolderCopy";
+import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
+import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
+import QueryStatsIcon from "@mui/icons-material/QueryStats";
+import SchoolIcon from "@mui/icons-material/School";
+import SettingsIcon from "@mui/icons-material/Settings";
+import SubjectIcon from "@mui/icons-material/Subject";
+import ViewWeekIcon from "@mui/icons-material/ViewWeek";
+import { ListItemButton } from "@mui/material";
 import Box from "@mui/material/Box";
 import CssBaseline from "@mui/material/CssBaseline";
 import Divider from "@mui/material/Divider";
@@ -8,26 +19,13 @@ import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import { useNavigate } from "react-router-dom";
-import { ListItemButton } from "@mui/material";
-import ViewWeekIcon from "@mui/icons-material/ViewWeek";
 import ListSubheader from "@mui/material/ListSubheader";
-import Typography from "@mui/material/Typography";
-import { useTheme } from "@mui/material/styles";
-import QueryStatsIcon from "@mui/icons-material/QueryStats";
-import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
-import SubjectIcon from "@mui/icons-material/Subject";
-import SettingsIcon from "@mui/icons-material/Settings";
-import FolderCopyIcon from "@mui/icons-material/FolderCopy";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import AssignmentIcon from "@mui/icons-material/Assignment";
-import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
-import SchoolIcon from "@mui/icons-material/School";
 import Tooltip from "@mui/material/Tooltip";
-import CoPresentIcon from "@mui/icons-material/CoPresent";
-import { StyledDrawer, DrawerHeader } from "./sideBar";
+import { useTheme } from "@mui/material/styles";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { hasRole } from "../../utils/userUtiles";
+import { DrawerHeader, StyledDrawer } from "./sideBar";
 
 const studentStuff = [
   { id: 0, text: "BackLog", icon: <SubjectIcon />, path: "/project/backlog" },

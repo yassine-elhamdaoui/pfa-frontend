@@ -13,6 +13,7 @@ import {
   IconButton,
   Menu,
   MenuItem,
+  Paper,
   Skeleton,
   Snackbar,
   Stack,
@@ -28,6 +29,8 @@ import { getUsers } from "../../services/userService";
 import { stringAvatar } from "../../utils/generalUtils";
 import { hasRole } from "../../utils/userUtiles";
 import ConfirmationDialog from "../../components/dialogs/ConfirmationDialog";
+import Breadcrumb from "../../components/breadCrumb/BreadCrumb";
+import BreadCrumb from "../../components/breadCrumb/BreadCrumb";
 
 
 const mode = localStorage.getItem("mode");
@@ -101,55 +104,68 @@ const cardColors = [
   if (loading) {
     return (
       <>
-        <Stack direction="row" spacing={2} marginTop={1} marginBottom={1} display="flex" justifyContent="space-between">
+        <Stack
+          direction="row"
+          spacing={2}
+          marginTop={1}
+          marginBottom={1}
+          display="flex"
+          justifyContent="space-between"
+        >
           <Skeleton variant="text" width={150} height={40} />
-          <Skeleton variant="rectangular" width={40} height={40} sx={{borderRadius:"50%"}}/>
+          <Skeleton
+            variant="rectangular"
+            width={40}
+            height={40}
+            sx={{ borderRadius: "50%" }}
+          />
         </Stack>
-      <Grid container spacing={2}>
-        {[...Array(10)].map((_, index) => (
-          <Grid
-            item
-            xs={12}
-            sm={6}
-            md={6}
-            gap={"10px"}
-            key={index}
-            sx={{ minWidth: "300px"}}
-          >
-          <Card
-            variant="outlined"
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              height: "250px",
-              alignItems: "stretch",
-              gap: "10px",
-              flexGrow: 1,
-            }}
-          >
-            <Box sx={{ p: 1 }}>
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-              >
-                <Skeleton variant="text" width={150} height={40} />
-              </Stack>
-              <Divider />
-              <Skeleton variant="text" width="100%" height={100} />
+        <Grid container spacing={2}>
+          {[...Array(10)].map((_, index) => (
+            <Grid
+              item
+              xs={12}
+              sm={6}
+              md={6}
+              gap={"10px"}
+              key={index}
+              sx={{ minWidth: "300px" }}
+            >
+              <Paper elevation={3}>
+                <Card
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    height: "250px",
+                    alignItems: "stretch",
+                    gap: "10px",
+                    flexGrow: 1,
+                  }}
+                >
+                  <Box sx={{ p: 1 }}>
+                    <Stack
+                      direction="row"
+                      justifyContent="space-between"
+                      alignItems="center"
+                    >
+                      <Skeleton variant="text" width={150} height={40} />
+                    </Stack>
+                    <Divider />
+                    <Skeleton variant="text" width="100%" height={100} />
 
-              <Stack direction="row" spacing={1} marginTop={2}>
-                <Skeleton variant="circular" width={40} height={40} />
-                <Skeleton variant="circular" width={40} height={40} />
-                <Skeleton variant="circular" width={40} height={40} />
-              </Stack>
-            </Box>
-            <Divider />
-          </Card>
-          </Grid>
-        ))}
-      </Grid>
+                    <Stack direction="row" spacing={1} marginTop={2}>
+                      <Skeleton variant="circular" width={40} height={40} />
+                      <Skeleton variant="circular" width={40} height={40} />
+                      <Skeleton variant="circular" width={40} height={40} />
+                    </Stack>
+                  </Box>
+                  <Divider />
+                </Card>
+              </Paper>
+            </Grid>
+          ))}
+        </Grid>
       </>
     );
   }
@@ -172,9 +188,13 @@ const cardColors = [
             alignItems: "center",
           }}
         >
-          <Typography variant="h4" fontWeight={400}>
-            Projects
-          </Typography>
+          <BreadCrumb
+            items={[
+              { label: "Home", link: "/" },
+              { label: "Projects", link: "#" },
+              { label: "2023/2024", link: "#" },
+            ]}
+          />
           <IconButton
             aria-controls="filter-menu"
             aria-haspopup="true"
@@ -333,11 +353,19 @@ const cardColors = [
             View
           </MenuItem>
           {isHOB && selectedProject && !selectedProject.isPublic && (
-            <MenuItem onClick={() => (setOpenDialog(true),setIsAcceptConfirmation(true))}>Accept</MenuItem>
+            <MenuItem
+              onClick={() => (
+                setOpenDialog(true), setIsAcceptConfirmation(true)
+              )}
+            >
+              Accept
+            </MenuItem>
           )}
           {isHOB && selectedProject && !selectedProject.isPublic && (
             <MenuItem
-              onClick={() => (setOpenDialog(true), setIsAcceptConfirmation(false))}
+              onClick={() => (
+                setOpenDialog(true), setIsAcceptConfirmation(false)
+              )}
             >
               Refuse
             </MenuItem>
