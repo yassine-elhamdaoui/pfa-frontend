@@ -51,10 +51,7 @@ function App() {
               <Route path="board" element={<Board />} />
               <Route path="reports" element={<Reports />} />
               <Route path="settings" element={<Settings />} />
-              <Route path="team/:id" element={<TeamLayout />}>
-                <Route index element={<Team />} />
-                <Route path="preferences" element={<Preferences />} />
-              </Route>
+              <Route path="team" element={<Team />} />
             </Route>
             {/* this one is for the supervisor */}
             <Route path="projects" element={<Projects />} />

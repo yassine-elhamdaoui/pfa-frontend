@@ -38,9 +38,9 @@ export default function BreadCrumb({ items }) {
           <StyledBreadcrumb
             key={index}
             component={index === 0 ? "a" : undefined} // Set component to "a" for the first breadcrumb
-            href={index === 0 ? "/assignments" : item.href} // Set href to "/" for the first breadcrumb
+            href={index === 0 ? "/" : item.href} // Set href to "/" for the first breadcrumb
             label={item.label}
-            icon={index === 0 ? <HomeIcon fontSize="small" /> : null}
+            icon={index === 0 && item.label === "Home"? <HomeIcon fontSize="small" /> : null}
           />
         ))}
       </Breadcrumbs>

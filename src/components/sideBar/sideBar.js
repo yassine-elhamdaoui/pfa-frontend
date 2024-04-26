@@ -4,12 +4,16 @@ const drawerWidth = 230;
 export const StyledDrawer = styled(Drawer)(({ theme }) => ({
   "& .MuiDrawer-paper": {
     boxSizing: "border-box",
-    marginTop: `64px`,
+    marginTop: "64px",
+    maxHeight: "calc(100svh - 64px)",
+    [theme.breakpoints.down("sm")]: {
+      marginTop: "55px",
+      maxHeight: "calc(100svh - 55px)",
+    },
     padding: "5px",
     zIndex: 1000,
     width: drawerWidth,
-    maxHeight: "calc(100svh - 64px)",
-  }, 
+  },
 }));
 
 export const DrawerHeader = styled("div")(({ theme }) => ({

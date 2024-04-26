@@ -172,11 +172,16 @@ const cardColors = [
 
   if (projects.length === 0) {
     return (
-      <PlaceHolder
-        icon={DeveloperBoardOffIcon}
-        title="No Projects Yet"
-        message="no projects published at the moment"
-      />
+      <>
+        <BreadCrumb
+          items={[{ label: "Home", link: "/" }, { label: "Projects" }]}
+        />
+        <PlaceHolder
+          icon={DeveloperBoardOffIcon}
+          title="No Projects Yet"
+          message="no projects published at the moment"
+        />
+      </>
     );
   } else {
     return (

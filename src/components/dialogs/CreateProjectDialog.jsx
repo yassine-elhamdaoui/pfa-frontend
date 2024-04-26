@@ -164,6 +164,7 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
     techStack: [],
     codeLink: "",
     branch: 1,
+    academicYear:"",
     supervisors: [],
     files: [],
     report: null,
@@ -240,6 +241,14 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
     data.append("status", projectType);
     data.append("techStack", techStack);
     data.append("codeLink", formData.codeLink);
+    const year = new Date().getFullYear();
+    const month = new Date().getMonth();
+    if (month >= 9 && month <= 12) {
+      formData.academicYear = `${year}/${year + 1}`;
+    } else if (month >= 1 && month <= 7) {
+      formData.academicYear = `${year - 1}/${year}`;
+    }
+    data.append("academicYear",formData.academicYear)
     data.append("branch", formData.branch);
     data.append(
       "supervisors",
@@ -254,6 +263,7 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
     for (let pair of data.entries()) {
       console.log(pair[0] + ", " + pair[1]);
     }
+
     await createProject(token, data ,setSnackbarOpen , setSnackbarMessage);
     setLoading(false);
     handleModalClose();
@@ -354,6 +364,7 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
             <Autocomplete
               multiple
               id="techStack"
+              limitTags={4}
               options={techOptions}
               filterSelectedOptions
               disableCloseOnSelect

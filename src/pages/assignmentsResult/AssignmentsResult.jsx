@@ -94,7 +94,7 @@ function AssignmentsResult({ mode }) {
       width: 110,
     },
     ...projects.map((project) => ({
-      field: `project_${project.id}`,
+      field: `${project.title}`,
       headerStyle: { backgroundColor: "lightgray" },
       headerClassName: "custom-header",
       headerName: project.name,

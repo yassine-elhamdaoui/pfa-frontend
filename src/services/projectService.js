@@ -182,3 +182,23 @@ export const rejectProject = async (token, projectId) => {
     throw new Error("Error rejecting project");
   }
 }
+
+export const makePreferences = async (token, ranking, setSnackbarOpen, setSnackbarMessage) => {
+  const response = await fetch("http://localhost:8080/api/projects/preferences", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(ranking),
+  });
+  if (response.ok) {
+    setSnackbarMessage("Preferences saved successfully");
+    setSnackbarOpen(true);
+    return await response.json();
+  } else {
+    setSnackbarMessage("Failed to save preferences");
+    setSnackbarOpen(true);
+    return await response.json();
+  }
+}

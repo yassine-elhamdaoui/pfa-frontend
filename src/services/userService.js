@@ -14,4 +14,23 @@ const getUsers = async (token) => {
   return users;
 };
 
-export { getUsers };
+const getUserById = async (token, userId) => {
+  try {
+    const response = await fetch(`http://localhost:8080/api/users/${userId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) {
+      throw new Error("Failed to fetch user");
+    }
+    const user = await response.json();
+    return user;
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    throw error;
+  }
+}
+export { getUsers , getUserById};
