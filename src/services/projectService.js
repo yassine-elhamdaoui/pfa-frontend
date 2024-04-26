@@ -1,5 +1,5 @@
 export default async function createProject(token, data, setSnackbarOpen, setSnackbarMessage) {
-  const response = await fetch("http://localhost:8080/api/projects", {
+  const response = await fetch("http://localhost:8081/api/projects", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -17,7 +17,7 @@ export default async function createProject(token, data, setSnackbarOpen, setSna
     return await response.json();
   }
 } 
-export const getAllProjects = async (token,years) => {
+export const getAllProjects = async (token,years,pageNumber) => {
     let academicYear = years;
     if (academicYear === undefined) {
           const year = new Date().getFullYear();
@@ -30,7 +30,8 @@ export const getAllProjects = async (token,years) => {
     }
     console.log(academicYear);
     const projects = await fetch(
-      `http://localhost:8080/api/projects?academicYear=${academicYear}`,
+      `http://localhost:8081/api/projects?pageNumber=${pageNumber}&academicYear=${academicYear}
+      `,
       {
         method: "GET",
         headers: {
@@ -47,7 +48,7 @@ export const getAllProjects = async (token,years) => {
     return projects;
 }
 export const getAllPreferences = async (token) => {
-    const preferences = await fetch("http://localhost:8080/api/projects/preferences", {
+    const preferences = await fetch("http://localhost:8081/api/projects/preferences", {
         method: "GET",
         headers: {
             Authorization: `Bearer ${token}`,
@@ -67,7 +68,7 @@ export const makeAssignment = async (
   setSnackbarMessage,
   setAssignmentLoading
 ) => {
-  const response = await fetch("http://localhost:8080/api/projects/assign", {
+  const response = await fetch("http://localhost:8081/api/projects/assign", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -95,7 +96,7 @@ export const makeAssignment = async (
 export const getAssignment = async (token) => {
   console.log(new Date().getFullYear());
   const assignment = await fetch(
-    `http://localhost:8080/api/assignments?year=${new Date().getFullYear()}`,
+    `http://localhost:8081/api/assignments?year=${new Date().getFullYear()}`,
     {
       method: "GET",
       headers: {
@@ -119,7 +120,7 @@ export const validateAssignments = async (
   setAssignmentLoading
 ) => {
   const response = await fetch(
-    `http://localhost:8080/api/projects/assign/validate`,
+    `http://localhost:8081/api/projects/assign/validate`,
     {
       method: "POST",
       headers: {
@@ -143,7 +144,7 @@ export const validateAssignments = async (
 
 export const acceptProject = async (token, projectId,setSnackbarOpen,setSnackbarMessage,setConfirmLoading) => {
   const response = await fetch(
-    `http://localhost:8080/api/projects/${projectId}/accept`,
+    `http://localhost:8081/api/projects/${projectId}/accept`,
     {
       method: "POST",
       headers: {
@@ -167,13 +168,30 @@ export const acceptProject = async (token, projectId,setSnackbarOpen,setSnackbar
 
 export const rejectProject = async (token, projectId) => {
   const response = await fetch(
-    `http://localhost:8080/api/projects/${projectId}/reject`,
+    `http://localhost:8081/api/projects/${projectId}/reject`,
     {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
+    }
+  );
+  if (response.ok) {
+    return await response.json();
+  } else {
+    throw new Error("Error rejecting project");
+  }
+}
+export const getYearAcademique = async(token)=>{
+  const response = await fetch(
+    `http://localhost:8081/api/projects/academicYear`,
+    {
+      method:"GET",
+      headers:{
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      }
     }
   );
   if (response.ok) {
