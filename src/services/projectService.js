@@ -182,3 +182,48 @@ export const rejectProject = async (token, projectId) => {
     throw new Error("Error rejecting project");
   }
 }
+
+
+export const getProjectById = async (projectId, token) => {
+  try {
+    const response = await fetch(`http://localhost:8080/api/projects/${projectId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch project: ${response.status}`);
+    }
+
+    const project = await response.json();
+    return project;
+  } catch (error) {
+    console.error("Error fetching project:", error);
+    throw error;
+  }
+};
+
+
+export const getSupervisorsByProjectId = async (projectId) => {
+  try {
+    const response = await fetch(`http://localhost:8080/api/projects/${projectId}/supervisors`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch supervisors: ${response.status}`);
+    }
+
+    const supervisors = await response.json();
+    return supervisors;
+  } catch (error) {
+    console.error("Error fetching supervisors:", error);
+    throw error;
+  }
+};
