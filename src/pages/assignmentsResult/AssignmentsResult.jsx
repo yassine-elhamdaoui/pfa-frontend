@@ -53,7 +53,7 @@ function AssignmentsResult({ mode }) {
     const fetchData = async () => {
       try {
         const fetchedTeams = await getAllTeams(token);
-        const fetchedProjects = await getAllProjects(token,undefined,50);
+        const fetchedProjects = await getAllProjects(token,undefined,undefined,50);
         const fetchedAssignmentsResult = await getAllPreferences(token);
         const fetchedAssignment = await getAssignment(token);
         console.log(fetchedAssignment);

@@ -63,7 +63,7 @@ function Team() {
         setLoading(true);
         const fetchedTeam = await getTeamById(token, teamId);
         const fetchedPreferences = await getAllPreferences(token);
-        const fetchedProjects = await getAllProjects(token);
+        const fetchedProjects = await getAllProjects(token,undefined,undefined,20);
         const fetchedAssignment = await getAssignment(token);
         setProjects(fetchedProjects);
         setTeam(fetchedTeam);
@@ -79,12 +79,17 @@ function Team() {
         setLoading(false);
       }
     };
-    fetchTeam();
+    if (teamId !== "undefined" && teamId !== "null") {
+      fetchTeam();
+    }else {
+      setLoading(false)
+
+    }
   }, []);
 
   return loading ? (
     <div>Loading...</div>
-  ) : (
+  ) : Object.keys(team).length > 0 ? (
     <div>
       <div
         style={{
@@ -153,11 +158,7 @@ function Team() {
                 {Object.keys(assignment).length !== 0 ? (
                   <BreadCrumb items={[{ link: "#", label: "Project" }]} />
                 ) : (
-                  <BreadCrumb
-                    items={[
-                      { link: "#", label: "Preferences" },
-                    ]}
-                  />
+                  <BreadCrumb items={[{ link: "#", label: "Preferences" }]} />
                 )}
                 <div
                   key={index}
@@ -287,6 +288,8 @@ function Team() {
         </Alert>
       </Snackbar>
     </div>
+  ) : (
+    <>no team yet</>
   );
 }
 

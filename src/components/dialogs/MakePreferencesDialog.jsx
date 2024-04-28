@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { forwardRef, useState } from "react";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";

@@ -100,7 +100,7 @@ const acceptUser = async (token, id,setSnackbarOpen,setSnackbarMessage,setConfir
 const rejectUser = async (token,id ,setSnackbarOpen,setSnackbarMessage,setConfirmLoading) => {
   console.log(id);
 
-  const response = await fetch(`http://localhost:8080/api/auth/${id}/reject?user=${id}`, {
+  const response = await fetch(`http://localhost:8080/api/auth/reject?user=${id}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

@@ -17,7 +17,7 @@ export default async function createProject(token, data, setSnackbarOpen, setSna
     return await response.json();
   }
 } 
-export const getAllProjects = async (token,years,pageSize) => {
+export const getAllProjects = async (token,years,pageNumber,pageSize) => {
     let academicYear = years;
     if (academicYear === undefined) {
           const year = new Date().getFullYear();
@@ -30,7 +30,7 @@ export const getAllProjects = async (token,years,pageSize) => {
     }
     console.log(academicYear);
     const projects = await fetch(
-      `http://localhost:8080/api/projects?academicYear=${academicYear}${pageSize !== undefined ? `&pageSize=${pageSize}` : ""}`,
+      `http://localhost:8080/api/projects?academicYear=${academicYear}${pageSize !== undefined ? `&pageSize=${pageSize}` : ""}${pageNumber !== undefined ? `&pageNumber=${pageNumber}` : ""}`,
       {
         method: "GET",
         headers: {
@@ -44,6 +44,7 @@ export const getAllProjects = async (token,years,pageSize) => {
         console.error("Error fetching data:", error);
         throw error;
       });
+      console.log(projects);
     return projects;
 }
 export const getAllPreferences = async (token) => {
@@ -200,5 +201,23 @@ export const makePreferences = async (token, ranking, setSnackbarOpen, setSnackb
     setSnackbarMessage("Failed to save preferences");
     setSnackbarOpen(true);
     return await response.json();
+
+  }
+}
+export const getYearAcademique = async(token)=>{
+  const response = await fetch(
+    `http://localhost:8080/api/projects/academicYears`,
+    {
+      method:"GET",
+      headers:{
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      }
+    }
+  );
+  if (response.ok) {
+    return await response.json();
+  } else {
+    throw new Error("Error rejecting project");
   }
 }
