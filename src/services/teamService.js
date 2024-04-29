@@ -4,7 +4,7 @@ export const getAllTeams = async (token) => {
 
     const selectedBranchId = branchId !== "null" ? branchId : studiedBranchId;
 
-    const allTeams = await fetch("http://localhost:8080/api/teams", {
+    const allTeams = await fetch("http://localhost:8081/api/teams", {
         method: "GET",
         headers: {
             Authorization: `Bearer ${token}`,
@@ -27,7 +27,7 @@ export const getAllTeams = async (token) => {
 
 const createTeam = async (teamData, token, setSnackbarOpen, setSnackbarMessage) => {
     try {
-        const response = await fetch('http://localhost:8080/api/teams', {
+        const response = await fetch('http://localhost:8081/api/teams', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

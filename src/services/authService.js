@@ -9,7 +9,7 @@ const authenticate = async (
 ) => {
   try {
     const response = await fetch(
-      "http://localhost:8080/api/auth/authenticate",
+      "http://localhost:8081/api/auth/authenticate",
       {
         method: "POST",
         headers: {
@@ -49,7 +49,7 @@ const authenticate = async (
 };
 
 const register = async (jsonData,setSnackbarMessage,setSnackbarOpen,setLoading) => {
-  const response = await fetch("http://localhost:8080/api/auth/register", {
+  const response = await fetch("http://localhost:8081/api/auth/register", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

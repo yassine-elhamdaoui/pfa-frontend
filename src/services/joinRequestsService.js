@@ -1,5 +1,5 @@
 export const getJoinRequests = async (token) => {
-    const response = await fetch("http://localhost:8080/api/join-requests", {
+    const response = await fetch("http://localhost:8081/api/join-requests", {
         headers: {
             Authorization: `Bearer ${token}`,
         },
@@ -9,7 +9,7 @@ export const getJoinRequests = async (token) => {
 }
 
 export const acceptJoinRequest = async (token, id) => {
-    const response = await fetch(`http://localhost:8080/api/join-requests/${id}/accept`, {
+    const response = await fetch(`http://localhost:8081/api/join-requests/${id}/accept`, {
         method: "POST",
         headers: {
             Authorization: `Bearer ${token}`,
@@ -20,7 +20,7 @@ export const acceptJoinRequest = async (token, id) => {
 }
 
 export const rejectJoinRequest = async (token, id) => {
-    const response = await fetch(`http://localhost:8080/api/join-requests/${id}/reject`, {
+    const response = await fetch(`http://localhost:8081/api/join-requests/${id}/reject`, {
         method: "POST",
         headers: {
             Authorization: `Bearer ${token}`,
