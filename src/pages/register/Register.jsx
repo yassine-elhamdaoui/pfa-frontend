@@ -53,13 +53,11 @@ export default function Register() {
     const data = new FormData(event.currentTarget);
     const jsonData = {};
     if (userType === "ROLE_STUDENT") {
-      data.set("studiedBranch", data.get("branch"));
+      data.set("branch", data.get("branch"));
       data.set("role", "ROLE_STUDENT");
-      data.delete("branch");
     } else if (userType === "ROLE_SUPERVISOR") {
       data.set("branch", data.get("branch"));
       data.set("role", "ROLE_SUPERVISOR");
-      data.delete("studiedBranch");
     }
 
     // Remove fields with empty values from FormData
