@@ -3,27 +3,20 @@ import { useParams, Link } from "react-router-dom";
 import { getProjectById } from "../../services/projectService";
 import { getSupervisorById } from "../../services/userService";
 import { getTeamById } from "../../services/teamService";
-import { Avatar, Button, Typography, Card, Grid } from "@mui/material";
+import { Avatar, Button, Typography, Card, Grid, Paper, CardHeader, AvatarGroup } from "@mui/material";
 import { hasRole } from "../../utils/userUtiles"; 
 import { stringAvatar,stringToColor } from "../../utils/generalUtils";
-import StickyNote2Icon from '@mui/icons-material/StickyNote2';
 import GetAppIcon from '@mui/icons-material/GetApp';
-import PdfIcon from '@mui/icons-material/PictureAsPdf';
-import TxtIcon from '@mui/icons-material/Description';
-import PptIcon from '@mui/icons-material/Slideshow';
-import XlsIcon from '@mui/icons-material/TableChart';
 import { CardContent } from "@mui/material";
 import { CardActions } from "@mui/material";
 import BorderColorOutlinedIcon from '@mui/icons-material/BorderColorOutlined';
-import IpynbIcon from '@mui/icons-material/Code';
-import DocIcon from '@mui/icons-material/Description';
-import ImageIcon from '@mui/icons-material/Image';
-import ZipIcon from '@mui/icons-material/Archive';
-import CsvIcon from '@mui/icons-material/TableChart';
-import JsonIcon from '@mui/icons-material/Code';
 import EventIcon from '@mui/icons-material/Event';
 import CodeIcon from '@mui/icons-material/Code';
 import TimelapseIcon from '@mui/icons-material/Timelapse';
+import { DataGrid } from "@mui/x-data-grid";
+import BreadCrumb from "../../components/breadCrumb/BreadCrumb";
+import { downloadFile } from "../../services/documentService";
+import ProjectDetailsSkeleton from "./ProjectDetailsSkeleton";
 
 
 
@@ -33,6 +26,7 @@ function ProjectDetails() {
   const { id } = useParams();
   const token = localStorage.getItem("token");
   const userId = localStorage.getItem("userId");
+  const mode = localStorage.getItem("mode")
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [supervisors, setSupervisors] = useState([]);
@@ -53,6 +47,7 @@ function ProjectDetails() {
       setSupervisors(fetchedSupervisors);
       if (fetchedProject.teamId) {
         const fetchedTeam = await getTeamById(fetchedProject.teamId, token);
+        console.log(fetchedTeam);
         setTeam(fetchedTeam);
     } else {
         console.error("Team is null for the project:", fetchedProject);
@@ -73,252 +68,323 @@ function ProjectDetails() {
 
     fetchData();
   }, [id, token]);
-
+  console.log(documents);
   if (loading) {
-    return <div>Loading...</div>;
+    return <ProjectDetailsSkeleton />;
   }
 
   if (!project) {
     return <div>Project not found!</div>;
   }
 
-  // Vérifier si l'utilisateur est membre de l'équipe du projet
-  const isTeamMember = team && team.members.some(member => member.id === userId);
-
-  // Vérifier si le projet est ancien ou nouveau
+  const isTeamMember =  Object.keys(team).length > 0 && team.members.some(member => member.id === parseInt(userId));
   const isOldProject = project.status === "old";
+  const canViewDocuments =
+    isOldProject &&
+    Object.keys(project).length > 0 &&
+    ((hasRole("ROLE_SUPERVISOR") && 
+      project.supervisorIds.some((id) => (id === userId))) ||
+      hasRole("ROLE_HEAD_OF_BRANCH") ||
+      (hasRole("ROLE_STUDENT") && isTeamMember));
 
-  // Déterminer si l'utilisateur peut voir les documents
-  const canViewDocuments = isOldProject && (hasRole("ROLE_SUPERVISOR") || hasRole("ROLE_HEAD_OF_BRANCH") || (hasRole("ROLE_STUDENT") && isTeamMember));
 
-  // Déterminer si l'utilisateur peut voir les commentaires
-  const canViewComments = (hasRole("ROLE_SUPERVISOR") || (hasRole("ROLE_STUDENT") && isTeamMember));
-
-  // Déterminer si le rapport existe
   const hasReport = report !== null;
 
-  // Déterminer si des documents existent
   const hasDocuments = documents.length > 0;
-
   return (
-    <div style={{ margin: '20px' }}>
-<h1 style={{ display: "flex", alignItems: "center" }}><StickyNote2Icon style={{ marginRight: "10px", fontSize: "2rem" }} />{project.title}</h1>
-<div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
-<div style={{ padding: "10px" }}>
-  <Typography variant="h6">Description</Typography>
-  <Typography variant="body1">{project.description}</Typography>
-</div>
-        <div style={{ border: "2px solid #ccc", borderRadius: "5px", padding: "10px" }}>
-          <Typography variant="h6" style={{ display: 'flex', alignItems: 'center' }}>Status <TimelapseIcon style={{ marginLeft: '5px' }} /></Typography>
-          <Typography variant="body1">{project.status}</Typography>
-        </div>
-        <div style={{ border: "2px solid #ccc", borderRadius: "5px", padding: "10px" }}>
-        <Typography variant="h6" style={{ display: 'flex', alignItems: 'center' }}>Academic Year <EventIcon style={{ marginLeft: '5px' }} /></Typography>
-          <Typography variant="body1">{project.academicYear}</Typography>
-        </div>
-        <div style={{ border: "2px solid #ccc", borderRadius: "5px", padding: "10px" }}>
-          <Typography variant="h6" style={{ display: 'flex', alignItems: 'center' }}>Technologies <CodeIcon style={{ marginLeft: '5px' }}/></Typography>
-          <Typography variant="body1">{project.techStack}</Typography>
-        </div>
-        
-      </div>
-      <h2 style={{ marginTop: '10px', marginBottom: '20px', backgroundColor: '#e6f7ff', border: '1px solid #ccc', padding: '5px', display: 'inline-block', color: '#000', width: 'fit-content' }}>Supervisors</h2>
-      <ul style={{ marginBottom: '20px' }}>
-      <Grid container spacing={2}>
-        {supervisors.map((supervisor) => (
-          <Grid item key={supervisor.id} xs={12} sm={6} md={4} lg={3}> 
-            <Card sx={{ width: "fit-content" }}> 
-              <Grid container direction="row" spacing={2} alignItems="center">
-                <Grid item>
-                  <Avatar sx={{ bgcolor: stringToColor(`${supervisor.firstName} ${supervisor.lastName}`) }}>
-                    {stringAvatar(`${supervisor.firstName} ${supervisor.lastName}`).children}
-                  </Avatar>
-                </Grid>
-                <Grid item>
-                  <Typography>{supervisor.firstName} {supervisor.lastName}</Typography>
-                  <Typography>{supervisor.email}</Typography>
-                </Grid>
-              </Grid>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-      </ul>
-
-
-
-      {team && (
-  <div style={{ marginBottom: '20px' }}>
-    <h2 style={{ marginTop: '10px', marginBottom: '20px', backgroundColor: '#e6f7ff', border: '1px solid #ccc', padding: '5px', display: 'inline-block', color: '#000', width: 'fit-content' }}>Team</h2>
-    <div style={{ marginBottom: '20px' }}>
-  <Typography variant="body1" style={{ border: "2px solid #ADD8E6", padding: "10px", borderRadius: "5px", backgroundColor: "#F0F8FF", color: "black", marginBottom: "10px", display: "inline-block" }}>Team Name</Typography>
-  <div style={{ display: 'inline-block', marginRight: '10px' }}> </div> {/* Ajouter un espace */}
-  <Typography variant="body1">{team.name}</Typography>
-</div>
-<Typography variant="body1" style={{ border: "2px solid #ADD8E6", padding: "10px", borderRadius: "5px", backgroundColor: "#F0F8FF", color: "black", marginTop: "20px", marginBottom: "10px", display: "inline-block" }}>Members</Typography>
-    <Grid container spacing={2}>
-    {team.members.map((member) => (
-        <Grid item key={member.id} xs={12} sm={6} md={4} lg={3}> 
-          <Card sx={{ width: "fit-content" }}> 
-            <Grid container direction="row" spacing={2} alignItems="center">
-              <Grid item>
-                <Avatar sx={{ bgcolor: stringToColor(`${member.firstName} ${member.lastName}`) }}>
-                  {stringAvatar(`${member.firstName} ${member.lastName}`).children}
-                </Avatar>
-              </Grid>
-              <Grid item>
-                <Typography>{member.firstName} {member.lastName}</Typography>
-                <Typography>{member.email}</Typography>
-              </Grid>
-            </Grid>
-          </Card>
-        </Grid>
-      ))}
-    </Grid>
-  </div>
-)}
-
-
-
-{canViewDocuments && hasDocuments && (
-  <div style={{ marginBottom: '20px' }}>
-<h2 style={{ marginTop: '10px', marginBottom: '20px', backgroundColor: '#e6f7ff', border: '1px solid #ccc', padding: '5px', display: 'inline-block', color: '#000' }}>Documents</h2>
-    <Grid container spacing={2}>
-      {documents.map((document) => {
-        // Split du nom du fichier pour obtenir l'extension
-        const fileNameParts = document.docName.split('.');
-        const fileExtension = fileNameParts[fileNameParts.length - 1].toLowerCase();
-
-        return (
-          <Grid item key={document.id}>
-            <Card>
-              <CardContent>
-                <Typography variant="h5" component="div">{document.docName}</Typography>
-                <Grid container alignItems="center" spacing={1}>
-                  <Grid item>
-                    {renderFileTypeIcon(fileExtension)}
-                  </Grid>
-                  <Grid item>
-                    <Typography variant="body2">{fileExtension.toUpperCase()}</Typography>
-                  </Grid>
-                </Grid>
-              </CardContent>
-              <CardActions>
-                <Button
-                  variant="outlined"
-                  startIcon={<GetAppIcon />}
-                  href={document.downloadLink}
-                  download
-                >
-                  Télécharger
-                </Button>
-              </CardActions>
-              {canViewComments && document.comments.length > 0 && (
-                <CardContent>
-                  <Typography variant="subtitle1">Commentaires:</Typography>
-                  <ul>
-                    {document.comments.map((comment, index) => (
-                      <li key={index}>
-                        <Typography variant="body2">{comment.text}</Typography>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              )}
-            </Card>
-          </Grid>
-        );
-      })}
-    </Grid>
-  </div>
-)}
-
-
-{isOldProject && hasReport && (
-  <div style={{ marginBottom: '20px' }}>
-    <h2 style={{ marginTop: '10px', marginBottom: '20px', backgroundColor: '#e6f7ff', border: '1px solid #ccc', padding: '5px', display: 'inline-block', color: '#000', width: 'fit-content' }}>Report</h2>
-    <Grid container spacing={2}>
-      <Grid item>
-        <Card>
-          <CardContent>
-            <Typography variant="h5" component="div">{report.docName}</Typography>
-            <Grid container alignItems="center" spacing={1}>
-              <Grid item>
-                {report.docName && renderFileTypeIcon(report.docName.split('.').pop())}
-              </Grid>
-              <Grid item>
-                <Typography variant="body2">{report.docName.split('.').pop().toUpperCase()}</Typography>
-              </Grid>
-            </Grid>
-          </CardContent>
-          <CardActions>
-            <Button
-              variant="outlined"
-              startIcon={<GetAppIcon />}
-              href={report.downloadLink}
-              download
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "20px",
+        minHeight: "calc(100vh - 100px)",
+      }}
+    >
+      <BreadCrumb
+        items={[
+          { label: "Home", link: "/" },
+          { label: "Projects", link: "/projects" },
+          { label: project.title, link: "#" },
+        ]}
+      />
+      <Grid container spacing={2} style={{ flex: 1 }}>
+        <Grid
+          item
+          xs={12}
+          md={7}
+          lg={8}
+          sx={{ display: "flex", flexDirection: "column", gap: "20px" }}
+        >
+          <Paper
+            elevation={3}
+            sx={{
+              padding: "10px",
+              backgroundColor: mode === "dark" ? "#121212" : "rgba(0,0,0,0.06)",
+            }}
+          >
+            <Typography variant="h6">Description</Typography>
+            <Typography variant="body1" color="textSecondary">
+              {project.description}
+            </Typography>
+          </Paper>
+          <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
+            <Paper
+              elevation={3}
+              sx={{
+                border: "1px solid rgba(255,255,255,0.5)",
+                borderRadius: "5px",
+                padding: "10px",
+                backgroundColor: "rgba(255, 204, 153, 0.2)",
+              }}
             >
-              Télécharger 
-            </Button>
-          </CardActions>
-          {canViewComments && report.comments && report.comments.length > 0 && (
-            <CardContent>
-              <Typography variant="subtitle1">Commentaires:</Typography>
-              <ul>
-                {report.comments.map((comment, index) => (
-                  <li key={index}>
-                    <Typography variant="body2">{comment.text}</Typography>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
+              <Typography
+                variant="h6"
+                style={{ display: "flex", alignItems: "center" }}
+              >
+                Status <TimelapseIcon style={{ marginLeft: "5px" }} />
+              </Typography>
+              <Typography variant="body1" color="textSecondary">
+                {project.status}
+              </Typography>
+            </Paper>
+            <Paper
+              elevation={3}
+              sx={{
+                border: "1px solid rgba(255,255,255,0.5)",
+                borderRadius: "5px",
+                padding: "10px",
+                backgroundColor: "rgba(255, 182, 193, 0.2)",
+              }}
+            >
+              <Typography
+                variant="h6"
+                style={{ display: "flex", alignItems: "center" }}
+              >
+                Academic Year <EventIcon style={{ marginLeft: "5px" }} />
+              </Typography>
+              <Typography variant="body1" color="textSecondary">
+                {project.academicYear}
+              </Typography>
+            </Paper>
+            <Paper
+              elevation={3}
+              sx={{
+                border: "1px solid rgba(255,255,255,0.5)",
+                borderRadius: "5px",
+                padding: "10px",
+                backgroundColor: "rgba(144, 238, 144, 0.2)",
+              }}
+            >
+              <Typography
+                variant="h6"
+                style={{ display: "flex", alignItems: "center" }}
+              >
+                Technologies <CodeIcon style={{ marginLeft: "5px" }} />
+              </Typography>
+              <Typography variant="body1" color="textSecondary">
+                {project.techStack}
+              </Typography>
+            </Paper>
+          </div>
+          {isOldProject && hasReport && (
+            <div
+              style={{
+                marginBottom: "20px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "20px",
+              }}
+            >
+              <BreadCrumb items={[{ label: "Documents", link: "#" }]} />
+              <DataGrid
+                rows={
+                  canViewDocuments && hasDocuments
+                    ? [report, ...documents]
+                    : [report]
+                }
+                columns={[
+                  {
+                    field: "docName",
+                    headerName: "Document Name",
+                    width: 200,
+                    valueGetter: (params) =>
+                      params.row === report
+                        ? `Report: ${params.row.docName
+                            .split(".")[0]
+                            .slice(0, -37)}`
+                        : params.row.docName.split(".")[0].slice(0, -37),
+                  },
+                  {
+                    field: "fileType",
+                    headerName: "File Type",
+                    width: 150,
+                    valueGetter: (params) =>
+                      params.row.docName.split(".").pop().toUpperCase(),
+                  },
+                  {
+                    field: "size",
+                    headerName: "Size",
+                    width: 100,
+                    valueGetter: (params) =>
+                      params.row === report
+                        ? `${(params.row.size / 1024).toFixed(2)} KB`
+                        : `${(params.row.size / 1024).toFixed(2)} KB`,
+                  },
+                  {
+                    field: "downloadLink",
+                    headerName: "Download",
+                    width: 150,
+                    renderCell: (params) => (
+                      <Button
+                        variant="text"
+                        onClick={() =>
+                          downloadFile(
+                            project.id,
+                            params.row.id,
+                            params.row.docName,
+                            token
+                          )
+                        }
+                      >
+                        <GetAppIcon />
+                      </Button>
+                    ),
+                  },
+                ]}
+                getRowClassName={(params) =>
+                  params.row === report ? "report-row" : "normal-row"
+                }
+                sx={{
+                  width: "100%",
+                  "& .MuiDataGrid-footerContainer.MuiDataGrid-withBorderColor.css-wop1k0-MuiDataGrid-footerContainer":
+                    { display: "none" },
+                  "& .report-row": {
+                    backgroundColor: "rgba(255, 204, 153, 0.1)",
+                    fontWeight: "bold",
+                  },
+                }}
+                autoHeight
+                disableRowSelectionOnClick
+                disableSelectionOnClick
+                disableColumnMenu
+              />
+            </div>
           )}
-        </Card>
+          {hasRole("ROLE_SUPERVISOR") && (
+            <Button
+              sx={{ position: "fixed", bottom: 16, right: 16 }}
+              component={Link}
+              to={/edit-project/`${id}`}
+              variant="contained"
+              color="primary"
+            >
+              Edit Project Details <BorderColorOutlinedIcon />
+            </Button>
+          )}
+        </Grid>
+        <Grid item xs={12} md={5} lg={4}>
+          <Paper
+            elevation={3}
+            sx={{
+              padding: "15px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+              height: "100%",
+              backgroundColor: mode === "dark" ? "#121212" : "rgba(0,0,0,0.06)",
+            }}
+          >
+            <BreadCrumb items={[{ label: "Supervisors", link: "#" }]} />
+            {supervisors.map((supervisor) => (
+              <Card
+                key={supervisor.id}
+                sx={{
+                  backgroundColor:
+                    mode === "dark" ? "#121212" : "rgba(0,0,0,0.06)",
+                }}
+              >
+                <CardHeader
+                  sx={{ padding: "10px" }}
+                  avatar={
+                    <Avatar
+                      sx={{
+                        bgcolor: stringToColor(
+                         `${supervisor.firstName}` `${supervisor.lastName}`
+                        ),
+                      }}
+                    >
+                      {
+                        stringAvatar(
+                          `${supervisor.firstName} ${supervisor.lastName}`
+                        ).children
+                      }
+                    </Avatar>
+                  }
+                  title={`${supervisor.firstName} ${supervisor.lastName}`}
+                  subheader={supervisor.email}
+                />
+              </Card>
+            ))}
+            <BreadCrumb items={[{ label: "Team", link: "#" }]} />
+            {team && (
+              <Card
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "10px",
+                  backgroundColor:
+                    mode === "dark" ? "#121212" : "rgba(0,0,0,0.06)",
+                }}
+              >
+                <div>
+                  <Typography variant="body1">{team.name}</Typography>
+                </div>
+                <AvatarGroup max={5}>
+                  {team.members.map((member) => (
+                    <Avatar
+                      key={member.id}
+                      {...stringAvatar(
+                       ` ${member.firstName} ${member.lastName}`
+                      )}
+                    />
+                  ))}
+                </AvatarGroup>
+              </Card>
+            )}
+            {project.codeLink && (
+              <>
+                <BreadCrumb items={[{ label: "Code Repository", link: "#" }]} />
+                <Card
+                  sx={{
+                    backgroundColor:
+                      mode === "dark" ? "#121212" : "rgba(0,0,0,0.06)",
+                  }}
+                >
+                  <CardContent>
+                    <Typography variant="body1">{project.codeLink}</Typography>
+                  </CardContent>
+                  <CardActions>
+                    <Button
+                      href={project.codeLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Visit Repository
+                    </Button>
+                  </CardActions>
+                </Card>
+              </>
+            )}
+          </Paper>
+        </Grid>
       </Grid>
-    </Grid>
-  </div>
-)}
-
-
-      {hasRole("ROLE_SUPERVISOR") && (
-        <Button sx={{ position: 'fixed', bottom: 16, right: 16 }} component={Link} to={`/edit-project/${id}`} variant="contained" color="primary">
-          Edit Project Details <BorderColorOutlinedIcon/>
-        </Button>
-      )}
-
     </div>
   );
 }
 
 
-function renderFileTypeIcon(fileType) {
-  switch (fileType.toLowerCase()) {
-    case 'pdf':
-      return <PdfIcon />;
-    case 'txt':
-      return <TxtIcon />;
-    case 'ppt':
-      return <PptIcon />;
-    case 'xls':
-      return <XlsIcon />;
-    case 'ipynb':
-      return <IpynbIcon />;
-    case 'doc':
-    case 'docx':
-      return <DocIcon />;
-    case 'jpg':
-    case 'jpeg':
-    case 'png':
-      return <ImageIcon />;
-    case 'zip':
-      return <ZipIcon />;
-    case 'csv':
-      return <CsvIcon />;
-    case 'json':
-      return <JsonIcon />;
-    default:
-      return null;
-  }
-}
+
+
 
 export default ProjectDetails;

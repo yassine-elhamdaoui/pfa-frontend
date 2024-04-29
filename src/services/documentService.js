@@ -1,47 +1,31 @@
-export const getDocumentById = async (documentId, token) => {
-    try {
-      const response = await fetch(`http://localhost:8080/api/documents/${documentId}`, {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-  
-      if (!response.ok) {
-        throw new Error(`Failed to fetch documents: ${response.status}`);
-      }
-  
-      const documents = await response.json();
-      return documents;
-    } catch (error) {
-      console.error("Error fetching documents:", error);
-      throw error;
-    }
-  };
-
-
-  export const getReportById = async (reportId, token) => {
-    try {
-      const response = await fetch(`http://localhost:8080/api/documents/${reportId}`, {
+export const downloadFile = async (projectId, docId, docName, token) => {
+  try {
+    // Fetch the file content from the endpoint
+    const response = await fetch(
+      "http://localhost:8080/api/projects/${projectId}/docs/${docId}/download",
+      {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
         },
-      });
-  
-      if (!response.ok) {
-        throw new Error(`Failed to fetch report: ${response.status}`);
       }
-  
-      const report = await response.json();
-      return report;
-    } catch (error) {
-      console.error("Error fetching report:", error);
-      throw error;
-    }
-  };
-  
-    
-    
+    );
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+
+    const fileExtension = docName.split(".").pop(); 
+    a.download = `${docName.split(".")[0].slice(0,-37)}.${fileExtension}`; 
+
+    document.body.appendChild(a);
+    a.click();
+
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch (error) {
+    console.error("Error downloading file:", error);
+  }
+};
