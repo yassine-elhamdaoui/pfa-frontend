@@ -26,8 +26,8 @@ import { useNavigate } from "react-router-dom";
 import PlaceHolder from "../../components/placeHolder/PlaceHolder";
 import {
   acceptProject,
+  getAcademicYear,
   getAllProjects,
-  getYearAcademique,
   rejectProject,
 } from "../../services/projectService";
 import { getUsers } from "../../services/userService";
@@ -36,6 +36,7 @@ import { hasRole } from "../../utils/userUtiles";
 import ConfirmationDialog from "../../components/dialogs/ConfirmationDialog";
 import ProjectSkeleton from "./ProjectSkeleton";
 import BreadCrumb from "../../components/breadCrumb/BreadCrumb";
+import { EmojiObjectsOutlined } from "@mui/icons-material";
 
 const mode = localStorage.getItem("mode");
 const isHOB = hasRole("ROLE_HEAD_OF_BRANCH");
@@ -48,7 +49,7 @@ function Projects() {
   const [loading3, setLoading3] = useState(false);
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
-  const [anchorEl2, setanchorEl2] = useState(null);
+  const [anchorEl2, setAnchorEl2] = useState(null);
   const open = Boolean(anchorEl);
   const [page, setPage] = useState(1);
   const [yearSelected, setyearSelected] = useState("2023/2024");
@@ -70,7 +71,7 @@ function Projects() {
     console.timeEnd("handleClick"); // End measuring time and log the result
   };
   const handleFilterClick = (event) => {
-    setanchorEl2(event.currentTarget);
+    setAnchorEl2(event.currentTarget);
   };
 
   const handleClose = () => {
@@ -79,7 +80,7 @@ function Projects() {
   };
   const handleFilterClose = () => {
     console.log("closed");
-    setanchorEl2(null);
+    setAnchorEl2(null);
   };
   const handleFilterSelect = (Year) => {
     if (Year !== yearSelected) {
@@ -89,7 +90,7 @@ function Projects() {
     }
   };
 
-  const handlPagination = (event, page) => {
+  const handlePagination = (event, page) => {
     if (page == 1) {
       setLoading(true);
     }
@@ -117,7 +118,7 @@ function Projects() {
   useEffect(() => {
     const fetchYears = async () => {
       try {
-        const Years = await getYearAcademique(token);
+        const Years = await getAcademicYear(token);
 
         setYears(Years);
       } catch (err) {
@@ -218,7 +219,7 @@ function Projects() {
     );
   }
 
-  if (projects.length === 0) {
+  if (projects.length === 0 && page === 1) {
     return (
       <>
         <BreadCrumb
@@ -233,7 +234,14 @@ function Projects() {
     );
   } else {
     return (
-      <Box sx={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "15px",
+          minHeight: "calc(100svh - 100px)",
+        }}
+      >
         <Box
           sx={{
             display: "flex",
@@ -241,7 +249,6 @@ function Projects() {
             alignItems: "center",
           }}
         >
-
           <BreadCrumb
             items={[
               { label: "Home", link: "/" },
@@ -252,15 +259,11 @@ function Projects() {
                 ) : (
                   yearSelected
                 ),
-                link: "#"
-              }
+                link: "#",
+              },
             ]}
           />
-          
 
-            
-            
-          
           <IconButton
             aria-controls="filter-menu"
             aria-haspopup="true"
@@ -295,8 +298,24 @@ function Projects() {
             }
           >
             {projects.length === 0 && page > 1 && (
-              <Box>
-                <Typography variant="h4">No more Projects</Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  marginTop: "20px", // Adjust as needed
+                }}
+              >
+                <EmojiObjectsOutlined
+                  sx={{ fontSize: 64,color:"lightgray" }}
+                />
+                <Typography
+                  variant="h4"
+                  color="textSecondary"
+                  textAlign="center"
+                >
+                  No more projects found
+                </Typography>
               </Box>
             )}
             {projects.map((Pro, index) => (
@@ -426,7 +445,7 @@ function Projects() {
             count={10}
             variant="outlined"
             color="primary"
-            onChange={handlPagination}
+            onChange={handlePagination}
           />
         </Box>
 

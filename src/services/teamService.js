@@ -58,7 +58,7 @@ const createTeam = async (teamData, token, setSnackbarOpen, setSnackbarMessage) 
 };
 
 
-const getTeamById = async (token, teamId) => {
+const getTeamById = async (teamId, token) => {
   try {
     const response = await fetch(`http://localhost:8080/api/teams/${teamId}`, {
       method: "GET",

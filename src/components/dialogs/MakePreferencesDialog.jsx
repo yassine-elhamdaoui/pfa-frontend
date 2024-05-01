@@ -6,7 +6,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
-import { DialogContentText, IconButton, Slide, Typography } from "@mui/material";
+import { DialogContentText, IconButton, Slide, Typography, colors } from "@mui/material";
 import DialogActions from "@mui/material/DialogActions";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import Grid from "@mui/material/Grid";
@@ -19,7 +19,22 @@ const lightColors = [
   "rgba(255, 255, 153, 0.2)",
   "rgba(255, 204, 153, 0.2)",
   "rgba(255, 182, 193, 0.2)",
+  "rgba(176, 224, 230, 0.2)",
+  "rgba(218, 112, 214, 0.2)",
+  "rgba(127, 255, 212, 0.2)",
+  "rgba(240, 230, 140, 0.2)",
+  "rgba(240, 128, 128, 0.2)",
+  "rgba(255, 192, 203, 0.2)",
+  "rgba(135, 206, 250, 0.2)",
+  "rgba(255, 250, 205, 0.2)",
+  "rgba(250, 128, 114, 0.2)",
+  "rgba(245, 222, 179, 0.2)",
+  "rgba(32, 178, 170, 0.2)",
+  "rgba(255, 165, 0, 0.2)",
+  "rgba(238, 130, 238, 0.2)",
+  "rgba(175, 238, 238, 0.2)",
 ];
+
 const token = localStorage.getItem("token");
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="down" ref={ref} {...props} />;
@@ -106,7 +121,7 @@ return (
                   InputProps={{
                     readOnly: true,
                     style: {
-                      backgroundColor: selectedProjectColors[index],
+                      backgroundColor: lightColors[index%lightColors.length],
                       width: "100%",
                     },
                   }}

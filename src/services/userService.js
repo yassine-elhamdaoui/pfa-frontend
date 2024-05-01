@@ -14,7 +14,7 @@ const getUsers = async (token) => {
   return users;
 };
 
-const getUserById = async (token, userId) => {
+const getUserById = async (userId, token) => {
   try {
     const response = await fetch(`http://localhost:8080/api/users/${userId}`, {
       method: "GET",

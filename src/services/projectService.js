@@ -17,6 +17,30 @@ export default async function createProject(token, data, setSnackbarOpen, setSna
     return await response.json();
   }
 } 
+export const getProjectById = async (projectId, token) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/projects/${projectId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch project: ${response.status}`);
+      }
+
+      const project = await response.json();
+      return project;
+    } catch (error) {
+      console.error("Error fetching project:", error);
+      throw error;
+    }
+};
 export const getAllProjects = async (token,years,pageNumber,pageSize) => {
     let academicYear = years;
     if (academicYear === undefined) {
@@ -204,7 +228,7 @@ export const makePreferences = async (token, ranking, setSnackbarOpen, setSnackb
 
   }
 }
-export const getYearAcademique = async(token)=>{
+export const getAcademicYear = async(token)=>{
   const response = await fetch(
     `http://localhost:8080/api/projects/academicYears`,
     {

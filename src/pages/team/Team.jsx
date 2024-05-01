@@ -25,12 +25,16 @@ import { getAllPreferences, getAllProjects, getAssignment } from "../../services
 import CommentsDisabledIcon from "@mui/icons-material/CommentsDisabled";
 import MakePreferencesDialog from "../../components/dialogs/MakePreferencesDialog";
 import StarBorderPurple500Icon from "@mui/icons-material/StarBorderPurple500";
+import TeamSkeleton from "./TeamSkeleton";
+import { useTheme } from "@mui/material/styles";
 
 
 const isResponsible = hasRole("ROLE_RESPONSIBLE");
 function Team() {
+  const theme = useTheme();
   const token = localStorage.getItem("token");
   const teamId = localStorage.getItem("team");
+  const userId = localStorage.getItem("userId");
   const mode = localStorage.getItem("mode");
   const navigate = useNavigate();
   const [team, setTeam] = useState({});
@@ -88,7 +92,7 @@ function Team() {
   }, []);
 
   return loading ? (
-    <div>Loading...</div>
+    <TeamSkeleton />
   ) : Object.keys(team).length > 0 ? (
     <div>
       <div
@@ -105,7 +109,9 @@ function Team() {
             { link: "#", label: team.name },
           ]}
         />
-        {isResponsible && <Button>edit</Button>}
+        {isResponsible && team.responsible.id === parseInt(userId) && (
+          <Button>edit</Button>
+        )}
       </div>
       <Grid container spacing={1} marginTop={2}>
         {team.members.map((member, index) => (
@@ -131,7 +137,9 @@ function Team() {
                   title={`${member.firstName} ${member.lastName}`}
                 />
                 {member.authorities.some(
-                  (authority) => authority.authority === "ROLE_RESPONSIBLE"
+                  (authority) =>
+                    authority.authority === "ROLE_RESPONSIBLE" &&
+                    team.responsible.id === member.id
                 ) ? (
                   <BadgeIcon sx={{ marginLeft: "10px" }} />
                 ) : null}
@@ -170,14 +178,22 @@ function Team() {
                     paddingTop: "30px",
                   }}
                 >
-                  <List>
+                  <List
+                    sx={{
+                      [theme.breakpoints.down("sm")]: {
+                        width: "100%",
+                      },
+                      [theme.breakpoints.up("md")]: {
+                        width: "70%",
+                      },
+                    }}
+                  >
                     {Object.entries(preference.projectPreferenceRanks)
                       .sort(([, a], [, b]) => a - b) // Sort preferences from smaller to bigger
                       .map(([projectId, ranking], index) => {
                         const project = projects.find(
                           (project) => project.id === parseInt(projectId)
                         );
-                        console.log(project);
                         return (
                           <ListItem
                             key={index}
@@ -188,6 +204,15 @@ function Team() {
                               borderTop: `solid 0.2px `,
                               borderLeft: `solid 0.2px `,
                               borderRight: `solid 0.2px `,
+                              borderBottom:
+                                index ===
+                                Object.entries(
+                                  preference.projectPreferenceRanks
+                                ).length -
+                                  1
+                                  ? `solid 0.2px white`
+                                  : "none", // Add borderBottom for the last item
+
                               borderColor:
                                 mode === "dark"
                                   ? "rgba(255, 255, 255, 0.12)"
@@ -223,7 +248,7 @@ function Team() {
               </>
             )
         )
-      ) : isResponsible ? (
+      ) : isResponsible && team.responsible.id === parseInt(userId) ? (
         <div
           style={{
             display: "flex",

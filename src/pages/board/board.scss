@@ -1,0 +1,163 @@
+.dark-theme-kanban {
+  /* Add your dark mode styles here */
+  .kanban-container{
+      background-color: #121212;
+      color: #fff;
+    
+        .e-header-cells.e-toggle-header{
+            background-color: #4545455e;
+            .e-header-icon.e-icons.e-column-collapse{
+                color: #ffffff90;
+                &:hover{
+                    color: #000;
+                    background-color: #ffffff41;
+                }
+                &:focus{
+                    color: #000;
+                    background-color: #ffffff41;
+                }
+            }
+            .e-header-text{
+                color: #fff;
+            }
+            .e-item-count{
+                color: #fff;
+            }
+    
+            .e-column-expand{
+                color: #ffffff90;
+
+                &:hover{
+                    color: #000;
+                    background-color: #ffffff41;
+                }
+                &:focus{
+                    color: #000;
+                    background-color: #ffffff41;
+                }
+            }
+        }
+        .e-kanban-table .e-content-row{
+    
+            .e-content-cells{
+                .e-collapse-header-text{
+                    color: #ffffff;
+                }
+                .e-swimlane-header{
+                    background-color: #4545455e;
+                    .e-icons.e-swimlane-row-collapse{
+                        color: #ffffff90;
+    
+                        &:hover{
+                            color: #000;
+                            background-color: #ffffff41;
+                        }
+                    }
+                    .e-icons.e-swimlane-row-expand{
+                        color: #ffffff90;
+
+                        &:hover{
+                            color: #000;
+                            background-color: #ffffff41;
+                        }
+                    }
+                    border-radius: 3px;
+                    .e-icons {
+                        .e-swimlane-row-expand::before{
+                            color: #ffffff90;
+                        }
+                    }
+                    .e-header-wrap{
+    
+                        .e-swimlane-text{
+                            color: #fff;
+                        }
+                    }
+                }
+            }
+    
+            .e-content-cells{
+    
+                .e-rag .e-drop .e-droppable{
+                    background-color: #ffffff90;
+                }
+            }
+        }
+    
+        td.e-content-cells.e-drag.e-drop.e-droppable{
+            background-color: #4545455e;
+    
+            .e-show-add-button{
+                border-color : white;
+            }
+            .e-show-add-icon.e-icons{
+                color: #ffffff90;
+            }
+            .e-card.e-card-color.e-droppable.e-lib.e-draggable{
+                background-color: #161515e6;
+                color: #ffffff8b;
+            }
+            .e-target-dragged-clone{
+                background-color: #454545;
+            }
+            .e-card-header-title.e-tooltip-text{
+                color: #ffffffc7;
+            }
+            .e-card-content.e-tooltip-text{
+                color: #ffffff8b;
+            }
+            .e-card-tag.e-card-label:nth-child(1){
+                background-color: #5cf2b368;
+                color: #fff;
+            }
+            .e-card-tag.e-card-label:nth-child(2){
+                background-color: #5c6df26f;
+                color: #fff;
+            }
+        }
+        div#kanban_859448178_0_dialog_wrapper{
+            background-color: #121212;
+            color: #fff;
+        }
+    }
+    .e-kanban.e-device .e-swimlane-header .e-swimlane-header-toolbar{
+        background-color: #4545455e;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        padding-top: 0;
+
+    }
+    .e-swimlane-tree.e-control.e-treeview.e-lib.e-fullrow-wrap.e-touch.e-keyboard{
+        background-color: #454545;
+        color: #fff;
+        ul.e-list-parent.e-ul{
+            padding: 0;
+            width: "100%";
+        }
+        .e-fullrow{
+            background-color: #383737;
+            height: fit-content;
+        }
+        .e-text-content{
+            padding-left: 0;
+            .e-list-text{
+                color: #ffffffc9;
+            }
+        }
+    }
+
+}
+
+
+
+
+.light-theme-kanban {
+    
+    .e-swimlane-header{
+           background-color: #f5f5f5;
+           color: #000;
+    }
+
+}
+
