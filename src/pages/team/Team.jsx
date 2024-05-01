@@ -65,7 +65,7 @@ function Team() {
     const fetchTeam = async () => {
       try {
         setLoading(true);
-        const fetchedTeam = await getTeamById(token, teamId);
+        const fetchedTeam = await getTeamById(teamId, token);
         const fetchedPreferences = await getAllPreferences(token);
         const fetchedProjects = await getAllProjects(token,undefined,undefined,20);
         const fetchedAssignment = await getAssignment(token);

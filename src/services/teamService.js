@@ -1,4 +1,3 @@
-import { getUserById } from "./userService";
 
 export const getAllTeams = async (token) => {
     const branchId = localStorage.getItem("branchId");

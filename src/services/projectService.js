@@ -228,6 +228,11 @@ export const makePreferences = async (token, ranking, setSnackbarOpen, setSnackb
 
   }
 }
+
+
+
+
+
 export const getAcademicYear = async(token)=>{
   const response = await fetch(
     `http://localhost:8080/api/projects/academicYears`,
@@ -245,3 +250,4 @@ export const getAcademicYear = async(token)=>{
     throw new Error("Error rejecting project");
   }
 }
+

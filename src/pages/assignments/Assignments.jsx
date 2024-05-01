@@ -143,7 +143,7 @@ function Assignments({ mode }) {
       headerClassName: "custom-header",
       width: 200,
       renderCell: (params) => (
-        <AvatarGroup max={3}>
+        <AvatarGroup max={5}>
           {params.row.members.map((member) => (
             <Avatar
               key={member.id}

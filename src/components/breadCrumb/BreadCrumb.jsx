@@ -30,7 +30,6 @@ function handleClick(event) {
 }
 
 export default function BreadCrumb({ items }) {
-  console.log(items);
   return (
     <div role="presentation" onClick={handleClick}>
       <Breadcrumbs aria-label="breadcrumb">

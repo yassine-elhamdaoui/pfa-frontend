@@ -1,33 +1,21 @@
-import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { getProjectById } from "../../services/projectService";
-import { getUserById } from "../../services/userService";
-import { getTeamById } from "../../services/teamService";
-import { Avatar, Button, Typography, Card, Grid, Paper, CardHeader, Box, AvatarGroup } from "@mui/material";
-import { hasRole } from "../../utils/userUtiles"; 
-import { stringAvatar,stringToColor } from "../../utils/generalUtils";
-import StickyNote2Icon from '@mui/icons-material/StickyNote2';
-import GetAppIcon from '@mui/icons-material/GetApp';
-import PdfIcon from '@mui/icons-material/PictureAsPdf';
-import TxtIcon from '@mui/icons-material/Description';
-import PptIcon from '@mui/icons-material/Slideshow';
-import XlsIcon from '@mui/icons-material/TableChart';
-import { CardContent } from "@mui/material";
-import { CardActions } from "@mui/material";
 import BorderColorOutlinedIcon from '@mui/icons-material/BorderColorOutlined';
-import IpynbIcon from '@mui/icons-material/Code';
-import DocIcon from '@mui/icons-material/Description';
-import ImageIcon from '@mui/icons-material/Image';
-import ZipIcon from '@mui/icons-material/Archive';
-import CsvIcon from '@mui/icons-material/TableChart';
-import JsonIcon from '@mui/icons-material/Code';
-import EventIcon from '@mui/icons-material/Event';
 import CodeIcon from '@mui/icons-material/Code';
+import EventIcon from '@mui/icons-material/Event';
+import GetAppIcon from '@mui/icons-material/GetApp';
 import TimelapseIcon from '@mui/icons-material/Timelapse';
+import { Avatar, AvatarGroup, Button, Card, CardActions, CardContent, CardHeader, Grid, Paper, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import BreadCrumb from "../../components/breadCrumb/BreadCrumb";
-// import { downloadFile } from "../../services/documentService";
-// import ProjectDetailsSkeleton from "./ProjectDetailsSkeleton";
+import { downloadFile } from "../../services/documentService";
+import { getProjectById } from "../../services/projectService";
+import { getTeamById } from "../../services/teamService";
+import { getUserById } from "../../services/userService";
+import { stringAvatar, stringToColor } from "../../utils/generalUtils";
+import { hasRole } from "../../utils/userUtiles";
+import ProjectDetailsSkeleton from "./ProjectDetailsSkeleton";
+import Groups2Icon from "@mui/icons-material/Groups2";
 
 
 
@@ -81,14 +69,14 @@ function ProjectDetails() {
   }, [id, token]);
   console.log(documents);
   if (loading) {
-    return <div>Loading</div>;
+    return <ProjectDetailsSkeleton />;
   }
 
   if (!project) {
     return <div>Project not found!</div>;
   }
 
-  const isTeamMember =  Object.keys(team).length > 0 && team.members.some(member => member.id === parseInt(userId));
+  const isTeamMember = team && Object.keys(team).length > 0 && team.members.some(member => member.id === parseInt(userId));
   const isOldProject = project.status === "old";
   const canViewDocuments =
     isOldProject &&
@@ -111,7 +99,13 @@ function ProjectDetails() {
         minHeight: "calc(100vh - 100px)",
       }}
     >
-      <div style={{display:"flex" , justifyContent:"space-between",alignItems:"center"}}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <BreadCrumb
           items={[
             { label: "Home", link: "/" },
@@ -119,17 +113,16 @@ function ProjectDetails() {
             { label: project.title, link: "#" },
           ]}
         />
-        {
-          hasRole("ROLE_SUPERVISOR") && project.supervisorIds.some((id) => (id === parseInt(userId))) && (
-          <Button
-            component={Link}
-            variant="text"
-            startIcon={<BorderColorOutlinedIcon />}
-          >
-            Edit
-          </Button>
-          )
-        }
+        {hasRole("ROLE_SUPERVISOR") &&
+          project.supervisorIds.some((id) => id === parseInt(userId)) && (
+            <Button
+              component={Link}
+              variant="text"
+              startIcon={<BorderColorOutlinedIcon />}
+            >
+              Edit
+            </Button>
+          )}
       </div>
       <Grid container spacing={2} style={{ flex: 1 }}>
         <Grid
@@ -251,8 +244,8 @@ function ProjectDetails() {
                     width: 100,
                     valueGetter: (params) =>
                       params.row === report
-                        ? `${(params.row.size / 1024).toFixed(2)} KB`
-                        : `${(params.row.size / 1024).toFixed(2)} KB`,
+                        ? `${(params.row.fileSize / 1024).toFixed(2)} KB`
+                        : `${(params.row.fileSize / 1024).toFixed(2)} KB`,
                   },
                   {
                     field: "downloadLink",
@@ -339,7 +332,7 @@ function ProjectDetails() {
               </Card>
             ))}
             <BreadCrumb items={[{ label: "Team", link: "#" }]} />
-            {team && (
+            {team ? (
               <Card
                 sx={{
                   display: "flex",
@@ -364,6 +357,19 @@ function ProjectDetails() {
                   ))}
                 </AvatarGroup>
               </Card>
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <Groups2Icon sx={{ fontSize: 80, color: "lightgray" }} />
+                <Typography variant="body1" textAlign="center">
+                  No team assigned yet
+                </Typography>
+              </div>
             )}
             {project.codeLink && (
               <>
@@ -397,34 +403,7 @@ function ProjectDetails() {
 }
 
 
-function renderFileTypeIcon(fileType) {
-  switch (fileType.toLowerCase()) {
-    case 'pdf':
-      return <PdfIcon />;
-    case 'txt':
-      return <TxtIcon />;
-    case 'ppt':
-      return <PptIcon />;
-    case 'xls':
-      return <XlsIcon />;
-    case 'ipynb':
-      return <IpynbIcon />;
-    case 'doc':
-    case 'docx':
-      return <DocIcon />;
-    case 'jpg':
-    case 'jpeg':
-    case 'png':
-      return <ImageIcon />;
-    case 'zip':
-      return <ZipIcon />;
-    case 'csv':
-      return <CsvIcon />;
-    case 'json':
-      return <JsonIcon />;
-    default:
-      return null;
-  }
-}
+
+
 
 export default ProjectDetails;

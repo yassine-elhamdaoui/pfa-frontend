@@ -60,7 +60,7 @@ function TeamSkeleton() {
           <Skeleton
             variant="rectangular"
             height={117}
-            sx={{ borderRadius: "5px" }}
+r            sx={{ borderRadius: "5px" }}
           />
         </Grid>
       </Grid>
