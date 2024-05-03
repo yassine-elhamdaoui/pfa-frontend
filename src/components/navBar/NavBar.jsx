@@ -7,6 +7,7 @@ import {
   Menu,
   MenuItem,
   Badge,
+  Popover
 } from "@mui/material";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
@@ -19,7 +20,7 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 import MoreIcon from "@mui/icons-material/MoreVert";
 import AddIcon from "@mui/icons-material/Add";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
-import { useState } from "react";
+import React, { useState, useEffect } from 'react';
 import { useTheme } from "@mui/material/styles";
 import { Search, SearchIconWrapper, StyledInputBase } from "./navBar";
 import CreateProjectDialog from "../dialogs/CreateProjectDialog";
@@ -29,10 +30,22 @@ import { hasRole } from "../../utils/userUtiles";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import { stringAvatar } from "../../utils/generalUtils";
+import { getAllNotificationsForCurrentUser ,deleteNotificationById} from '../../services/notificationService';
+import DeleteIcon from '@mui/icons-material/Delete';
+import BreadCrumb from "../breadCrumb/BreadCrumb"
+import {List, ListItem, ListItemText} from "@mui/material";
+import { Divider } from "@mui/material";
+
+
+
 
 // eslint-disable-next-line react/prop-types
 export default function NavBar({ handleDrawerOpen, setMode }) {
   const theme = useTheme();
+  const [notificationAnchorEl, setNotificationAnchorEl] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [mobileNotificationPopupOpen, setMobileNotificationPopupOpen] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState({});
   const [teamDialogOpen, setTeamDialogOpen] = useState(false);
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -45,9 +58,88 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
       setSnackbarOpen(false);
     };
 
+
+    useEffect(() => {
+      const fetchNotifications = async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const notifications = await getAllNotificationsForCurrentUser(token);
+          // Trier les notifications par date de création
+         notifications.sort((a, b) => new Date(b.creationDate) - new Date(a.creationDate));
+         setNotifications(notifications); 
+         // Calculer le temps écoulé pour chaque notification
+        const now = Date.now();
+        const elapsedTimeMap = {};
+        notifications.forEach(notification => {
+          const creationTime = new Date(notification.creationDate).getTime();
+          const diffInMinutes = Math.floor((now - creationTime) / (1000 * 60));
+          elapsedTimeMap[notification.id] = calculateElapsedTime(diffInMinutes);
+        });
+        setElapsedTime(elapsedTimeMap);     
+        } catch (error) {
+          console.error('Error fetching notifications:', error);
+          setSnackbarMessage('Error fetching notifications');
+          setSnackbarOpen(true);
+        }
+      };
+  
+      fetchNotifications();
+    }, []);
+  
+
+
+
+
+    const calculateElapsedTime = (diffInMinutes) => {
+      if (diffInMinutes < 60) {
+        return `${diffInMinutes} min${diffInMinutes > 1 ? 's' : ''} ago`;
+      } else if (diffInMinutes < 1440) {
+        const diffInHours = Math.floor(diffInMinutes / 60);
+        return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+      } else if (diffInMinutes < 43200) {
+        const diffInDays = Math.floor(diffInMinutes / 1440);
+        return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+      } else if (diffInMinutes < 525600) {
+        const diffInMonths = Math.floor(diffInMinutes / 43200);
+        return `${diffInMonths} month${diffInMonths > 1 ? 's' : ''} ago`;
+      } else {
+        const diffInYears = Math.floor(diffInMinutes / 525600);
+        return `${diffInYears} year${diffInYears > 1 ? 's' : ''} ago`;
+      }
+    };
+
+
+    const handleDeleteNotification = async (notificationId) => {
+      try {
+        const token = localStorage.getItem('token');
+        await deleteNotificationById(token, notificationId);
+        // Actualise la liste des notifications après la suppression
+        const updatedNotifications = notifications.filter((notification) => notification.id !== notificationId);
+        setNotifications(updatedNotifications);
+        // Affiche une notification de succès
+        setSnackbarMessage('Notification deleted successfully');
+        setSnackbarOpen(true);
+      } catch (error) {
+        console.error('Error deleting notification:', error);
+        // Affiche une notification d'erreur
+        setSnackbarMessage('Error deleting notification');
+        setSnackbarOpen(true);
+      }
+    };
+    
+
+
+
+
+
+
+
+
+
   const isMenuOpen = Boolean(anchorEl);
   const isModeMenuOpen = Boolean(anchorEl2);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
+  const isNotificationPopoverOpen = Boolean(notificationAnchorEl);
 
   const haveTeam = localStorage.getItem("team") != "null";
 
@@ -96,6 +188,20 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
     handleMenuClose();
     localStorage.setItem("mode", "dark");
   };
+  const handleMobileNotificationPopupOpen = (event) => {
+    setMobileNotificationPopupOpen(true);
+  };
+  
+  const handleCloseMobileNotificationPopup = () => {
+    setMobileNotificationPopupOpen(false);
+  };
+
+  const handleCloseNotificationPopover = () => {
+    setNotificationAnchorEl(null);
+  };
+
+
+  
 
   const menuId = "primary-search-account-menu";
   const renderMenu = (
@@ -169,18 +275,18 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
         </IconButton>
         <p>Messages</p>
       </MenuItem>
-      <MenuItem>
-        <IconButton
-          size="large"
-          aria-label="show 17 new notifications"
-          color="inherit"
-        >
-          <Badge badgeContent={17} color="error">
-            <NotificationsIcon />
-          </Badge>
-        </IconButton>
-        <p>Notifications</p>
-      </MenuItem>
+      <MenuItem onClick={handleMobileNotificationPopupOpen}>
+      <IconButton
+        size="large"
+        aria-label="show 17 new notifications"
+        color="inherit"
+      >
+        <Badge badgeContent={notifications.length} color="error">
+          <NotificationsIcon />
+        </Badge>
+      </IconButton>
+      <p>Notifications</p>
+    </MenuItem>
       <MenuItem onClick={handleProfileMenuOpen}>
         <IconButton
           size="large"
@@ -207,6 +313,56 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
       </MenuItem>
     </Menu>
   );
+  const renderMobileNotificationPopup = (
+    <Menu
+      anchorEl={mobileMoreAnchorEl}
+      anchorOrigin={{
+        vertical: "top",
+        horizontal: "right",
+      }}
+      id="mobile-notification-popup"
+      keepMounted
+      transformOrigin={{
+        vertical: "top",
+        horizontal: "right",
+      }}
+      open={mobileNotificationPopupOpen}
+      onClose={handleCloseMobileNotificationPopup}
+      sx={{ '& .MuiMenu-paper': { width: '100vw', maxWidth: '100vw', maxHeight: '80vh' } }}
+    >
+      <Box sx={{ width: '100%' }}>
+        <Box sx={{ mb: 2, fontSize: '1.1rem', fontWeight: 'bold', marginLeft: 2 }}>
+          <BreadCrumb items={[{ label: "Notifications", link: "#" }]} />
+        </Box>
+        <Divider />
+        <List>
+          {notifications.map((notification, index) => (
+            <React.Fragment key={notification.id}>
+              <ListItem>
+                {/* Contenu de chaque notification */}
+                <ListItemText
+                  primary={notification.title}
+                  secondary={notification.description}
+                />
+                <IconButton onClick={() => handleDeleteNotification(notification.id)}>
+                  <DeleteIcon />
+                </IconButton>
+              </ListItem>
+              {index !== notifications.length - 1 && <Divider />}
+            </React.Fragment>
+          ))}
+        </List>
+      </Box>
+    </Menu>
+  );
+
+  
+
+
+
+
+
+
 
 
   return (
@@ -299,15 +455,93 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
                 <MailIcon />
               </Badge>
             </IconButton>
+
+            
             <IconButton
-              size="large"
-              aria-label="show 17 new notifications"
-              color="inherit"
-            >
-              <Badge badgeContent={17} color="error">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
+            size="large"
+            aria-label="show 17 new notifications"
+            color="inherit"
+            onClick={(event) => setNotificationAnchorEl(event.currentTarget)}
+          >
+            <Badge badgeContent={notifications.length} color="error">
+              <NotificationsIcon />
+            </Badge>
+          </IconButton>
+
+          <Popover
+  open={isNotificationPopoverOpen}
+  anchorEl={notificationAnchorEl}
+  onClose={handleCloseNotificationPopover}
+  anchorOrigin={{
+    vertical: 'bottom',
+    horizontal: 'right',
+  }}
+  transformOrigin={{
+    vertical: 'top',
+    horizontal: 'right',
+  }}
+  sx={{ width: '90%'}}
+>
+  <Box sx={{ display: 'flex', flexDirection: 'column', p: 2, padding: '8px 0 0' }}>
+    <Box sx={{ mb: 2, fontSize: '1.1rem', fontWeight: 'bold', marginLeft: 2 }}>
+      <BreadCrumb items={[{ label: "Notifications", link: "#" }]} />
+    </Box>
+    <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
+      {notifications.map((notification, index) => (
+        <ListItem
+          key={notification.id}
+          alignItems="flex-start"
+          sx={{ borderBottom: index !== notifications.length - 1 ? '1px solid #ccc' : 'none' }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              width: '100%',
+            }}
+          >
+            <ListItemText
+              primary={
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    width: '100%',
+                  }}
+                >
+                  <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                    {notification.title}
+                  </Typography>
+                  <IconButton onClick={() => handleDeleteNotification(notification.id)}>
+                    <DeleteIcon />
+                  </IconButton>
+                </Box>
+              }
+              secondary={
+                <React.Fragment>
+                 <Typography
+                   sx={{ display: 'inline', wordWrap: 'break-word' }}
+                      component="span"
+                      variant="body2"
+                       color="text.primary"
+                      >
+                   {notification.description}
+                 </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'right' }}>
+                    {elapsedTime[notification.id] ? `${elapsedTime[notification.id]}` : ''}
+                  </Typography>
+                </React.Fragment>
+              }
+            />
+          </Box>
+        </ListItem>
+      ))}
+    </List>
+  </Box>
+</Popover>
+
+
             <IconButton
               size="large"
               edge="end"
@@ -339,6 +573,7 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
         </Toolbar>
       </AppBar>
       {renderMobileMenu}
+      {renderMobileNotificationPopup}
       {renderMenu}
       {renderModeMenu}
       {isSupervisor && (
@@ -378,3 +613,23 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
     </Box>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
