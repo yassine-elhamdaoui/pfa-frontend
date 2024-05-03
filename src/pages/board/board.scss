@@ -3,7 +3,7 @@
   .kanban-container{
       background-color: #121212;
       color: #fff;
-    
+
         .e-header-cells.e-toggle-header{
             background-color: #4545455e;
             .e-header-icon.e-icons.e-column-collapse{
@@ -41,7 +41,7 @@
     
             .e-content-cells{
                 .e-collapse-header-text{
-                    color: #ffffff;
+                    color: #ffffffe1;
                 }
                 .e-swimlane-header{
                     background-color: #4545455e;
@@ -52,11 +52,19 @@
                             color: #000;
                             background-color: #ffffff41;
                         }
+                        &:focus{
+                            color: #000;
+                            background-color: #ffffff41;
+                        }
                     }
                     .e-icons.e-swimlane-row-expand{
                         color: #ffffff90;
 
                         &:hover{
+                            color: #000;
+                            background-color: #ffffff41;
+                        }
+                        &:focus{
                             color: #000;
                             background-color: #ffffff41;
                         }
@@ -86,7 +94,6 @@
     
         td.e-content-cells.e-drag.e-drop.e-droppable{
             background-color: #4545455e;
-    
             .e-show-add-button{
                 border-color : white;
             }
@@ -150,6 +157,10 @@
 }
 
 
+.card-done {
+  transition: box-shadow 1s ease;
+  box-shadow: 0 0 10px 5px rgba(0, 255, 0, 0.5);
+}
 
 
 .light-theme-kanban {
