@@ -6,7 +6,7 @@ import {
   ColumnsDirective,
   KanbanComponent,
 } from "@syncfusion/ej2-react-kanban";
-import { Avatar, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography } from "@mui/material";
+import { Avatar, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
 import {
   Search,
   SearchIconWrapper,
