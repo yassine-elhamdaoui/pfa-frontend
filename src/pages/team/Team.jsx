@@ -27,6 +27,8 @@ import MakePreferencesDialog from "../../components/dialogs/MakePreferencesDialo
 import StarBorderPurple500Icon from "@mui/icons-material/StarBorderPurple500";
 import TeamSkeleton from "./TeamSkeleton";
 import { useTheme } from "@mui/material/styles";
+import {EditTeamDialog} from "../../components/dialogs/EditTeamDialog";
+
 
 
 const isResponsible = hasRole("ROLE_RESPONSIBLE");
@@ -41,7 +43,9 @@ function Team() {
   const [preferences, setPreferences] = useState([]);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [assignment, setAssignment] = useState({})
+  const [assignment, setAssignment] = useState({});
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+
 
       const [snackbarOpen, setSnackbarOpen] = useState(false);
       const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -59,6 +63,10 @@ function Team() {
     setPreferencesDialogOpen(true);
   }
 
+
+  const handleEditClicked = () => {
+    setEditDialogOpen(true); 
+  };
 
 
   useEffect(() => {
@@ -110,9 +118,19 @@ function Team() {
           ]}
         />
         {isResponsible && team.responsible.id === parseInt(userId) && (
-          <Button>edit</Button>
+          <Button onClick={handleEditClicked}>Edit</Button>
         )}
       </div>
+
+      {editDialogOpen && (
+        <EditTeamDialog
+          teamDialogOpen={editDialogOpen}
+          handleModalClose={() => setEditDialogOpen(false)}
+          setSnackbarOpen={setSnackbarOpen}
+          setSnackbarMessage={setSnackbarMessage}
+        />
+      )}
+      
       <Grid container spacing={1} marginTop={2}>
         {team.members.map((member, index) => (
           <Grid item key={index} xs={12} sm={6} md={4} lg={3}>

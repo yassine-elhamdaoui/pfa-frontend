@@ -79,3 +79,36 @@ const getTeamById = async (teamId, token) => {
 
 
 export { createTeam , getTeamById};
+
+
+
+export const updateTeam = async (teamData, token, setSnackbarOpen, setSnackbarMessage) => {
+  try {
+    const teamId = localStorage.getItem("team");
+      const response = await fetch(`http://localhost:8080/api/teams/${teamId}`, {
+          method: 'PUT', // Utilisation de la méthode PUT pour la mise à jour
+          headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify(teamData),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+          console.error('Failed to update team:', data);
+          throw new Error('Failed to update team');
+      }
+      
+      console.log('Team updated successfully. Backend response:', data);
+      setSnackbarMessage("Team updated successfully"); // Message de succès
+      setSnackbarOpen(true); // Ouvrir le Snackbar
+      return data;
+  } catch (error) {
+      console.error('Error updating team:', error);
+      setSnackbarMessage("Failed to update team"); // Message d'erreur
+      setSnackbarOpen(true); // Ouvrir le Snackbar
+      throw error;
+  }
+};
