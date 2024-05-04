@@ -12,13 +12,14 @@ export function stringToColor(string) {
   return color;
 }
 
-export function stringAvatar(name,dimentions,font) {
+export function stringAvatar(name,dimentions,font,borderRadius) {
   return {
     sx: {
       bgcolor: stringToColor(name),
       width: dimentions === undefined ? 35 : dimentions,
       height: dimentions === undefined ? 35 : dimentions,
       fontSize: font === undefined ? 20 : font,
+      borderRadius: borderRadius === undefined ? "50%" : `${borderRadius}px`,
     },
     children: `${name.split(" ")[0][0]}${name.split(" ")[1][0]}`,
   };

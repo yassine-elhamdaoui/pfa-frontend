@@ -1,53 +1,133 @@
-import {
-  Box,
-  IconButton,
-  Typography,
-  Button,
-  Tooltip,
-  Menu,
-  MenuItem,
-  Badge,
-} from "@mui/material";
-import AppBar from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
-import MenuIcon from "@mui/icons-material/Menu";
-import Avatar from "@mui/material/Avatar";
-import SearchIcon from "@mui/icons-material/Search";
 import AccountCircle from "@mui/icons-material/AccountCircle";
-import MailIcon from "@mui/icons-material/Mail";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-import MoreIcon from "@mui/icons-material/MoreVert";
 import AddIcon from "@mui/icons-material/Add";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
-import { useState } from "react";
-import { useTheme } from "@mui/material/styles";
-import { Search, SearchIconWrapper, StyledInputBase } from "./navBar";
+import MailIcon from "@mui/icons-material/Mail";
+import MenuIcon from "@mui/icons-material/Menu";
+import MoreIcon from "@mui/icons-material/MoreVert";
+import NotificationsIcon from "@mui/icons-material/Notifications";
+import SearchIcon from "@mui/icons-material/Search";
+import {
+  Badge,
+  Box,
+  Button,
+  IconButton,
+  Menu,
+  MenuItem,
+  Tooltip,
+  Typography
+} from "@mui/material";
+import Alert from "@mui/material/Alert";
+import AppBar from "@mui/material/AppBar";
+import Avatar from "@mui/material/Avatar";
+import Snackbar from "@mui/material/Snackbar";
+import Toolbar from "@mui/material/Toolbar";
+import { useEffect, useState } from "react";
+import { NavLink } from "react-router-dom";
+import {
+  deleteNotificationById,
+  getAllNotificationsForCurrentUser,
+} from "../../services/notificationService";
+import { stringAvatar } from "../../utils/generalUtils";
+import { hasRole } from "../../utils/userUtiles";
 import CreateProjectDialog from "../dialogs/CreateProjectDialog";
 import CreateTeamDialog from "../dialogs/CreateTeamDialog";
-import { NavLink } from "react-router-dom";
-import { hasRole } from "../../utils/userUtiles";
-import Snackbar from "@mui/material/Snackbar";
-import Alert from "@mui/material/Alert";
-import { stringAvatar } from "../../utils/generalUtils";
+import Notifications from "../notification/Notifications";
+import { Search, SearchIconWrapper, StyledInputBase } from "./navBar";
 
 // eslint-disable-next-line react/prop-types
 export default function NavBar({ handleDrawerOpen, setMode }) {
-  const theme = useTheme();
+  const mode = localStorage.getItem("mode");
+  const [notificationAnchorEl, setNotificationAnchorEl] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [elapsedTime, setElapsedTime] = useState({});
   const [teamDialogOpen, setTeamDialogOpen] = useState(false);
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [anchorEl2, setAnchorEl2] = useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
 
-    const [snackbarOpen, setSnackbarOpen] = useState(false);
-    const [snackbarMessage, setSnackbarMessage] = useState("");
-    const handleSnackbarClose = () => {
-      setSnackbarOpen(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
+
+
+    const handleCloseNotsView = () => {
+      setNotificationAnchorEl(null);
     };
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const notifications = await getAllNotificationsForCurrentUser(token);
+        // Trier les notifications par date de création
+        notifications.sort(
+          (a, b) => new Date(b.creationDate) - new Date(a.creationDate)
+        );
+        setNotifications(notifications);
+        // Calculer le temps écoulé pour chaque notification
+        const now = Date.now();
+        const elapsedTimeMap = {};
+        notifications.forEach((notification) => {
+          const creationTime = new Date(notification.creationDate).getTime();
+          const diffInMinutes = Math.floor((now - creationTime) / (1000 * 60));
+          elapsedTimeMap[notification.id] = calculateElapsedTime(diffInMinutes);
+        });
+        setElapsedTime(elapsedTimeMap);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+        setSnackbarMessage("Error fetching notifications");
+        setSnackbarOpen(true);
+      }
+    };
+
+    fetchNotifications();
+
+    // Set up polling to fetch notifications every 1 minute
+    const interval = setInterval(fetchNotifications, 60000);
+
+    // Clean up interval on component unmount
+    return () => clearInterval(interval);
+  }, []);
+
+  const calculateElapsedTime = (diffInMinutes) => {
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes} min${diffInMinutes > 1 ? "s" : ""} ago`;
+    } else if (diffInMinutes < 1440) {
+      const diffInHours = Math.floor(diffInMinutes / 60);
+      return `${diffInHours} hour${diffInHours > 1 ? "s" : ""} ago`;
+    } else if (diffInMinutes < 43200) {
+      const diffInDays = Math.floor(diffInMinutes / 1440);
+      return `${diffInDays} day${diffInDays > 1 ? "s" : ""} ago`;
+    } else if (diffInMinutes < 525600) {
+      const diffInMonths = Math.floor(diffInMinutes / 43200);
+      return `${diffInMonths} month${diffInMonths > 1 ? "s" : ""} ago`;
+    } else {
+      const diffInYears = Math.floor(diffInMinutes / 525600);
+      return `${diffInYears} year${diffInYears > 1 ? "s" : ""} ago`;
+    }
+  };
+
+  const handleDeleteNotification = async (notificationId) => {
+    try {
+      const token = localStorage.getItem("token");
+      await deleteNotificationById(token, notificationId);
+      // Actualise la liste des notifications après la suppression
+      const updatedNotifications = notifications.filter(
+        (notification) => notification.id !== notificationId
+      );
+      setNotifications(updatedNotifications);
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+    }
+  };
 
   const isMenuOpen = Boolean(anchorEl);
   const isModeMenuOpen = Boolean(anchorEl2);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
+  const isNotificationPopoverOpen = Boolean(notificationAnchorEl);
 
   const haveTeam = localStorage.getItem("team") != "null";
 
@@ -96,6 +176,9 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
     handleMenuClose();
     localStorage.setItem("mode", "dark");
   };
+
+
+
 
   const menuId = "primary-search-account-menu";
   const renderMenu = (
@@ -169,13 +252,15 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
         </IconButton>
         <p>Messages</p>
       </MenuItem>
-      <MenuItem>
+      <MenuItem 
+        onClick={(event) => setNotificationAnchorEl(event.currentTarget)}
+      >
         <IconButton
           size="large"
           aria-label="show 17 new notifications"
           color="inherit"
         >
-          <Badge badgeContent={17} color="error">
+          <Badge badgeContent={notifications.length} color="error">
             <NotificationsIcon />
           </Badge>
         </IconButton>
@@ -289,7 +374,9 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
             </Tooltip>
           ) : null}
 
-          <Box sx={{ display: { xs: "none", md: "flex" } ,alignItems:"center"}}>
+          <Box
+            sx={{ display: { xs: "none", md: "flex" }, alignItems: "center" }}
+          >
             <IconButton
               size="large"
               aria-label="show 4 new mails"
@@ -299,15 +386,28 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
                 <MailIcon />
               </Badge>
             </IconButton>
+
             <IconButton
               size="large"
               aria-label="show 17 new notifications"
               color="inherit"
+              onClick={(event) => setNotificationAnchorEl(event.currentTarget)}
             >
-              <Badge badgeContent={17} color="error">
+              <Badge badgeContent={notifications.length} color="error">
                 <NotificationsIcon />
               </Badge>
             </IconButton>
+
+            <Notifications
+              notificationAnchorEl={notificationAnchorEl}
+              isNotificationPopoverOpen={isNotificationPopoverOpen}
+              handleCloseNotsView={handleCloseNotsView}
+              notifications={notifications}
+              elapsedTime={elapsedTime}
+              handleDeleteNotification={handleDeleteNotification}
+              mode={mode}
+            />
+
             <IconButton
               size="large"
               edge="end"
