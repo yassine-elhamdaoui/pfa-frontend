@@ -1,7 +1,7 @@
 export const getAllNotificationsForCurrentUser = async (token) => {
     const userId = localStorage.getItem("userId");
 
-    const allNotifications = await fetch("http://localhost:8080/api/notifications", {
+    const allNotifications = await fetch(`http://localhost:8080/api/notifications/user/${userId}`, {
         method: "GET",
         headers: {
             Authorization: `Bearer ${token}`,
@@ -14,13 +14,10 @@ export const getAllNotificationsForCurrentUser = async (token) => {
         throw error;
     });
 
-    const notificationsForCurrentUser = allNotifications.filter(
-        (notification) => notification.userId === parseInt(userId)
-    );
-
-    console.log(notificationsForCurrentUser);
-    return notificationsForCurrentUser;
+    console.log(allNotifications);
+    return allNotifications;
 }
+
 
 
 

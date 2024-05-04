@@ -131,7 +131,7 @@ function Notifications({
                     <div style={{ margin: "10px 0 0 0" }}>
                       <Avatar
                         variant="square"
-                        {...stringAvatar("yassine el hamdaoui", 35, 20, 7)}
+                        {...stringAvatar(notification.nameOfSender, 35, 20, 7)}
                       />
                     </div>
 
