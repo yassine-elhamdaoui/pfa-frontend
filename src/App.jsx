@@ -68,7 +68,7 @@ function App() {
             <Route path="teams" element={<Teams />} />
             {/* end */}
             {/* for hob ans supervisor */}
-            <Route path="defense" element={<Defense />} />
+            <Route path="defenses" element={<Defense />} />
             {/* end */}
             <Route path="*" element={<NotFoundPage />} />
           </Route>
