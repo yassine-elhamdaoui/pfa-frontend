@@ -26,37 +26,42 @@ function ProjectDetails() {
   const token = localStorage.getItem("token");
   const userId = localStorage.getItem("userId");
   const mode = localStorage.getItem("mode")
-  const [project, setProject] = useState(null);
+  const [project, setProject] = useState({});
+  const [user , setUser] = useState({});
   const [loading, setLoading] = useState(true);
   const [supervisors, setSupervisors] = useState([]);
-  const [team, setTeam] = useState(null);
+  const [team, setTeam] = useState({});
+  const [projectTeam, setProjectTeam] = useState({});
   const [documents, setDocuments] = useState([]);
   const [report, setReport] = useState(null); 
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const fetchedUser = await getUserById(userId, token);
+        const fetchedTeam = await getTeamById(fetchedUser.teamId, token);
+        setUser(fetchedUser);
         const fetchedProject = await getProjectById(id, token);
+        console.log(fetchedProject);
         setProject(fetchedProject);
 
         const supervisorPromises = fetchedProject.supervisorIds.map((supervisorId) =>
         getUserById(supervisorId, token)
-      );
-      const fetchedSupervisors = await Promise.all(supervisorPromises);
-      setSupervisors(fetchedSupervisors);
-      if (fetchedProject.teamId) {
-        const fetchedTeam = await getTeamById(fetchedProject.teamId, token);
-        console.log(fetchedTeam);
-        setTeam(fetchedTeam);
-    } else {
-        console.error("Team is null for the project:", fetchedProject);
-    }
+        );
+        const fetchedSupervisors = await Promise.all(supervisorPromises);
+        console.log(fetchedSupervisors);
+        setSupervisors(fetchedSupervisors);
+          console.log(fetchedTeam);
+          setTeam(fetchedTeam);
+          const fetchedProjectTeam = await getTeamById(fetchedProject.teamId, token);
+          setProjectTeam(fetchedProjectTeam);
+          console.error("Team is null for the project:", fetchedProject);
     
-      // Récupération des documents du projet s'il est ancien
-      if (fetchedProject.status === "old") {
-        setDocuments(fetchedProject.documentIds);
-        setReport(fetchedProject.reportId);
-      }
+        // Récupération des documents du projet s'il est ancien
+        if (fetchedProject.status === "old") {
+          setDocuments(fetchedProject.folders.filter((folder) => folder.type === "DOCUMENTS")[0].documents);
+          setReport(fetchedProject.folders.filter((folder) => folder.type === "REPORT")[0].documents[0]);
+        }
 
       } catch (error) {
         console.error("Error fetching project details:", error);
@@ -68,6 +73,7 @@ function ProjectDetails() {
     fetchData();
   }, [id, token]);
   console.log(documents);
+  console.log(projectTeam);
   if (loading) {
     return <ProjectDetailsSkeleton />;
   }
@@ -76,7 +82,10 @@ function ProjectDetails() {
     return <div>Project not found!</div>;
   }
 
-  const isTeamMember = team && Object.keys(team).length > 0 && team.members.some(member => member.id === parseInt(userId));
+  const isTeamMember =
+    projectTeam &&
+    Object.keys(projectTeam).length > 0 &&
+    projectTeam.members.some((member) => member.id === parseInt(userId));
   const isOldProject = project.status === "old";
   const canViewDocuments =
     isOldProject &&
@@ -89,7 +98,7 @@ function ProjectDetails() {
 
   const hasReport = report !== null;
 
-  const hasDocuments = documents.length > 0;
+  const hasDocuments = documents && documents.length > 0;
   return (
     <div
       style={{
@@ -133,7 +142,7 @@ function ProjectDetails() {
           sx={{ display: "flex", flexDirection: "column", gap: "20px" }}
         >
           <Paper
-            elevation={3}
+            elevation={2}
             sx={{
               padding: "10px",
               backgroundColor: mode === "dark" ? "#121212" : "rgba(0,0,0,0.06)",
@@ -146,7 +155,7 @@ function ProjectDetails() {
           </Paper>
           <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
             <Paper
-              elevation={3}
+              elevation={2}
               sx={{
                 border: "1px solid rgba(255,255,255,0.5)",
                 borderRadius: "5px",
@@ -165,7 +174,7 @@ function ProjectDetails() {
               </Typography>
             </Paper>
             <Paper
-              elevation={3}
+              elevation={2}
               sx={{
                 border: "1px solid rgba(255,255,255,0.5)",
                 borderRadius: "5px",
@@ -184,7 +193,7 @@ function ProjectDetails() {
               </Typography>
             </Paper>
             <Paper
-              elevation={3}
+              elevation={2}
               sx={{
                 border: "1px solid rgba(255,255,255,0.5)",
                 borderRadius: "5px",
@@ -296,7 +305,8 @@ function ProjectDetails() {
               display: "flex",
               flexDirection: "column",
               gap: "10px",
-              height: "100%",
+              height: "fit-content",
+              maxHeight: "100%",
               backgroundColor: mode === "dark" ? "#121212" : "rgba(0,0,0,0.06)",
             }}
           >
@@ -332,7 +342,7 @@ function ProjectDetails() {
               </Card>
             ))}
             <BreadCrumb items={[{ label: "Team", link: "#" }]} />
-            {team ? (
+            {Object.keys(projectTeam).length > 0 ? (
               <Card
                 sx={{
                   display: "flex",
@@ -344,10 +354,10 @@ function ProjectDetails() {
                 }}
               >
                 <div>
-                  <Typography variant="body1">{team.name}</Typography>
+                  <Typography variant="body1">{projectTeam.name}</Typography>
                 </div>
                 <AvatarGroup max={5}>
-                  {team.members.map((member) => (
+                  {projectTeam.members.map((member) => (
                     <Avatar
                       key={member.id}
                       {...stringAvatar(
@@ -365,36 +375,43 @@ function ProjectDetails() {
                   alignItems: "center",
                 }}
               >
-                <Groups2Icon sx={{ fontSize: 80, color: "lightgray" }} />
+                <Groups2Icon sx={{ fontSize: 70, color: "lightgray" }} />
                 <Typography variant="body1" textAlign="center">
                   No team assigned yet
                 </Typography>
               </div>
             )}
-            {project.codeLink && (
-              <>
-                <BreadCrumb items={[{ label: "Code Repository", link: "#" }]} />
-                <Card
-                  sx={{
-                    backgroundColor:
-                      mode === "dark" ? "#121212" : "rgba(0,0,0,0.06)",
-                  }}
-                >
-                  <CardContent>
-                    <Typography variant="body1">{project.codeLink}</Typography>
-                  </CardContent>
-                  <CardActions>
-                    <Button
-                      href={project.codeLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Visit Repository
-                    </Button>
-                  </CardActions>
-                </Card>
-              </>
-            )}
+            {project.codeLink &&
+              Object.keys(team).length > 0 &&
+              Object.keys(project).length > 0 &&
+              team.id === project.teamId && (
+                <>
+                  <BreadCrumb
+                    items={[{ label: "Code Repository", link: "#" }]}
+                  />
+                  <Card
+                    sx={{
+                      backgroundColor:
+                        mode === "dark" ? "#121212" : "rgba(0,0,0,0.06)",
+                    }}
+                  >
+                    <CardContent>
+                      <Typography variant="body1">
+                        {project.codeLink}
+                      </Typography>
+                    </CardContent>
+                    <CardActions>
+                      <Button
+                        href={project.codeLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Visit Repository
+                      </Button>
+                    </CardActions>
+                  </Card>
+                </>
+              )}
           </Paper>
         </Grid>
       </Grid>

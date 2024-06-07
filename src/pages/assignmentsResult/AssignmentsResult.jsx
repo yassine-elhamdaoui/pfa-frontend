@@ -7,15 +7,18 @@ import GridTableSkeleton from "../../components/gridTable/GridTableSkeleton";
 import PlaceHolder from "../../components/placeHolder/PlaceHolder";
 import {
   getAllPreferences,
-  getAllProjects,
+  getAllProjectsForCurrentYear,
   getAssignment,
   validateAssignments,
 } from "../../services/projectService";
 import { getAllTeams } from "../../services/teamService";
 import { hasRole } from "../../utils/userUtiles";
 import ConfirmationDialog from "../../components/dialogs/ConfirmationDialog";
-import { Button } from "@mui/material";
+import { Button, Typography } from "@mui/material";
 import BreadCrumb from "../../components/breadCrumb/BreadCrumb";
+import EditAssignmentDialog from "../../components/dialogs/EditAssignmentDialog";
+import { set } from "lodash";
+import { Link } from "react-router-dom";
 
 const token = localStorage.getItem("token");
 const isHOB = hasRole("ROLE_HEAD_OF_BRANCH");
@@ -30,11 +33,17 @@ function AssignmentsResult({ mode }) {
   const [projects, setProjects] = useState([]);
   const [teams, setTeams] = useState([]);
   const [assignmentsResult, setAssignmentsResult] = useState([]);
+  const [originalAssignmentsResult, setOriginalAssignmentsResult] = useState([]);
   const [assignment, setAssignment] = useState({});
   const [loading, setLoading] = useState(true);
   const [assignmentLoading, setAssignmentLoading] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const handleDialogClose = () => {
+    setOpenEditDialog(false);
+  };
 
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
@@ -52,8 +61,16 @@ function AssignmentsResult({ mode }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const fetchedTeams = await getAllTeams(token);
-        const fetchedProjects = await getAllProjects(token,undefined,undefined,50);
+        let academicYear 
+          const year = new Date().getFullYear();
+          const month = new Date().getMonth();
+          if (month >= 9 && month <= 12) {
+            academicYear = `${year}/${year + 1}`;
+          } else if (month >= 1 && month <= 7) {
+            academicYear = `${year - 1}/${year}`;
+          }
+        const fetchedTeams = await getAllTeams(token,academicYear);
+        const fetchedProjects = await getAllProjectsForCurrentYear(token);
         const fetchedAssignmentsResult = await getAllPreferences(token);
         const fetchedAssignment = await getAssignment(token);
         console.log(fetchedAssignment);
@@ -72,6 +89,7 @@ function AssignmentsResult({ mode }) {
         setTeams(fetchedTeams);
         setProjects(fetchedProjects);
         setAssignmentsResult(processedAssignmentsResult);
+        setOriginalAssignmentsResult(fetchedAssignmentsResult);
         setAssignment(fetchedAssignment);
         setLoading(false);
       } catch (error) {
@@ -127,6 +145,9 @@ function AssignmentsResult({ mode }) {
       return acc;
     }, {}),
   }));
+  const handleEditDialogOpen = () => {
+    setOpenEditDialog(true);
+  };
 
   return loading ? (
     <GridTableSkeleton mode={mode} />
@@ -161,9 +182,14 @@ function AssignmentsResult({ mode }) {
           ]}
         />
         {assignment && assignment.completed === false && isHOB ? (
-          <Button variant="outlined" onClick={handleMakeAssignment}>
-            Validate
-          </Button>
+          <>
+            <Button variant="text" onClick={handleEditDialogOpen}>
+              Edit
+            </Button>
+            <Button variant="outlined" onClick={handleMakeAssignment}>
+              Validate
+            </Button>
+          </>
         ) : null}
       </div>
       <GridTable columns={columns} rows={rows} loading={loading} mode={mode} />
@@ -176,7 +202,9 @@ function AssignmentsResult({ mode }) {
         <Alert
           onClose={handleSnackbarClose}
           severity={
-            snackbarMessage && snackbarMessage.includes("projects are now")
+            snackbarMessage &&
+            (snackbarMessage.includes("projects are now") ||
+              snackbarMessage.includes("successfully"))
               ? "success"
               : "error"
           }
@@ -195,6 +223,16 @@ function AssignmentsResult({ mode }) {
         setLoading={setAssignmentLoading}
         loading={assignmentLoading}
       />
+      {console.log(assignmentsResult)}
+      <EditAssignmentDialog
+        teams={teams}
+        projects={projects}
+        originalAssignmentsResult={originalAssignmentsResult}
+        editDialogOpen={openEditDialog}
+        handleDialogClose={handleDialogClose}
+        setSnackbarMessage={setSnackbarMessage}
+        setSnackbarOpen={setSnackbarOpen}
+      />
     </div>
   ) : (
     <>
@@ -205,11 +243,22 @@ function AssignmentsResult({ mode }) {
           { label: "Result", href: "/result" },
         ]}
       />
-      <PlaceHolder
-        icon={AssignmentLateIcon}
-        title="No assignments"
-        message="No assignments have been made yet."
-      />
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          paddingTop: "100px",
+          alignItems: "center",
+        }}
+      >
+        <img src="/src/assets/teams_assignemt.png" height={180} width={180} style={{marginBottom:"10px"}}/>
+        <Typography variant="h5" color="textSecondary" textAlign="center">
+          There are no assignments to show
+        </Typography>
+        <Typography variant="body2" color="textSecondary" textAlign="center">
+          Please wait for the assignments to be generated
+        </Typography>
+      </div>
     </>
   );
 }

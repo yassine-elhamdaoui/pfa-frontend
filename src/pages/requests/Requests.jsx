@@ -6,7 +6,7 @@ import NotFoundPage from "../notFoundPage/NotFoundPage";
 import { getJoinRequests } from "../../services/joinRequestsService";
 import ConfirmationDialog from "../../components/dialogs/ConfirmationDialog";
 import { acceptUser, rejectUser } from "../../services/authService";
-import { Alert, Skeleton, Snackbar } from "@mui/material";
+import { Alert, Skeleton, Snackbar, Typography } from "@mui/material";
 import PlaceHolder from "../../components/placeHolder/PlaceHolder";
 import JoinRequestSkeleton from "../../components/joinRequest/JoinRequestSkeleton";
 import DoNotDisturbAltIcon from "@mui/icons-material/DoNotDisturbAlt";
@@ -45,34 +45,40 @@ function Requests() {
   return isHOB ? (
     loading ? (
       <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              marginBottom: "20px",
-              marginTop: "10px",
-            }}
-          >
-              <Skeleton
-                variant="rectangular"
-                height={25}
-                sx={{ borderRadius: "20px" }}
-                width={170}
-                animation="wave"
-              />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            marginBottom: "20px",
+            marginTop: "10px",
+          }}
+        >
+          <Skeleton
+            variant="rectangular"
+            height={25}
+            sx={{ borderRadius: "20px" }}
+            width={170}
+            animation="wave"
+          />
         </div>
-        <div style={{display:"flex" , justifyContent:"center" ,flexDirection:"column",gap:"10px"}}>
-            <JoinRequestSkeleton />
-            <JoinRequestSkeleton />
-            <JoinRequestSkeleton />
-            <JoinRequestSkeleton />
-            <JoinRequestSkeleton />
-            <JoinRequestSkeleton />
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            flexDirection: "column",
+            gap: "10px",
+          }}
+        >
+          <JoinRequestSkeleton />
+          <JoinRequestSkeleton />
+          <JoinRequestSkeleton />
+          <JoinRequestSkeleton />
+          <JoinRequestSkeleton />
+          <JoinRequestSkeleton />
         </div>
       </div>
-    ) : (
-      requests.length > 0 ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+    ) : requests.length > 0 ? (
+      <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
         <BreadCrumb
           items={[
             { label: "Home", href: "/" },
@@ -150,28 +156,51 @@ function Requests() {
             {snackbarMessage}
           </Alert>
         </Snackbar>
-      </div>) : (
-        <>
+      </div>
+    ) : (
+      <>
         <BreadCrumb
           items={[
             { label: "Home", href: "/" },
             { label: "Requests", href: "/requests" },
           ]}
         />
-        <PlaceHolder
-          icon={DoNotDisturbAltIcon}
-          title="No requests found"
-          message="There are no requests to show"
-        />
-        </>
-      )
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            paddingTop: "100px",
+            alignItems: "center",
+          }}
+        >
+          <img src="/src/assets/join_requests.png" height={200} width={200} />
+          <Typography variant="h5" color="textSecondary" textAlign="center">
+            No join requests to show
+          </Typography>
+        </div>
+      </>
     )
   ) : (
-    <PlaceHolder
-      icon={DoNotDisturbAltIcon}
-      title="You are not authorized"
-      message="You can't view this page ,contact the admin for more information"
-    />
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        paddingTop: "100px",
+        alignItems: "center",
+      }}
+    >
+      <img src="/src/assets/forbidden.jpg" height={200} width={200} />
+      <Typography variant="h5" color="textSecondary" textAlign="center">
+        You are not authorized to view this page
+      </Typography>
+      <Typography
+        variant="body2"
+        color="textSecondary"
+        textAlign="center"
+      >
+        Please contact the administrator
+      </Typography>
+    </div>
   );
 }
 

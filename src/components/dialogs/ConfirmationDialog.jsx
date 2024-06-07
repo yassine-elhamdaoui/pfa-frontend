@@ -6,6 +6,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import { LoadingButton } from "@mui/lab";
+import { set } from "lodash";
 
 
 
@@ -18,6 +19,7 @@ export default function ConfirmationDialog({
   loading,
 }) {
   const onConfirmDialogClose = () => {
+    setLoading(false);
     setOpenDialog(false);
   };
   const onConfirmDialogConfirm = () => {
@@ -44,7 +46,7 @@ export default function ConfirmationDialog({
           loading={loading}
           sx={{marginLeft:"15px" , marginRight:"15px"}}
           loadingIndicator="Loading..."
-          variant="contained"
+          variant="outlined"
           onClick={onConfirmDialogConfirm}
           autoFocus
         >

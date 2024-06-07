@@ -2,7 +2,7 @@ export const downloadFile = async (projectId, docId, docName, token) => {
   try {
     // Fetch the file content from the endpoint
     const response = await fetch(
-      "http://localhost:8080/api/projects/${projectId}/docs/${docId}/download",
+      `http://localhost:8080/api/projects/${projectId}/docs/${docId}/download`,
       {
         method: "GET",
         headers: {
@@ -29,3 +29,29 @@ export const downloadFile = async (projectId, docId, docName, token) => {
     console.error("Error downloading file:", error);
   }
 };
+
+export const addComment = async (docId, text, token) => {
+  try {
+    const response = await fetch(`http://localhost:8080/api/comments`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ text: text, documentId: docId }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("Failed to add comment:", data);
+      throw new Error("Failed to add comment");
+    }
+
+    console.log("Comment added with success here is Backend response:", data);
+    return data;
+  } catch (error) {
+    console.error("Error adding comment:", error);
+    throw error;
+  }
+}

@@ -1,166 +1,146 @@
-import { useEffect, useRef, useState } from "react";
-import "./board.scss";
-
-import {
-  ColumnDirective,
-  ColumnsDirective,
-  KanbanComponent,
-} from "@syncfusion/ej2-react-kanban";
-import {
-  Alert,
-  Avatar,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Grid,
-  Paper,
-  Skeleton,
-  Snackbar,
-  Typography,
-} from "@mui/material";
+import './board.scss';
+import { Alert, Avatar, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, Paper, Skeleton, Snackbar, Typography } from "@mui/material";
+import BreadCrumb from "../../components/breadCrumb/BreadCrumb";
 import {
   Search,
   SearchIconWrapper,
   StyledInputBase,
 } from "../../components/navBar/navBar";
-import SearchIcon from "@mui/icons-material/Search";
-import BreadCrumb from "../../components/breadCrumb/BreadCrumb";
-import { stringAvatar } from "../../utils/generalUtils";
-import { updateUserStory } from "../../services/userStoryService";
+import { ColumnDirective, ColumnsDirective, KanbanComponent } from "@syncfusion/ej2-react-kanban";
+import { Link, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { getTeamById } from "../../services/teamService";
 import { getProjectById } from "../../services/projectService";
+import { getUserStories } from "../../services/backlog";
+import { updateUserStory } from "../../services/userStoryService";
+import { stringAvatar } from "../../utils/generalUtils";
 import KeyboardDoubleArrowUpIcon from "@mui/icons-material/KeyboardDoubleArrowUp";
 import KeyboardDoubleArrowDownIcon from "@mui/icons-material/KeyboardDoubleArrowDown";
 import DensityMediumIcon from "@mui/icons-material/DensityMedium";
 import AutoModeIcon from "@mui/icons-material/AutoMode";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import ArticleIcon from "@mui/icons-material/Article";
-import { getUserStories } from "../../services/backlog";
-import { Link, useSearchParams } from "react-router-dom";
-import { getUserById } from "../../services/userService";
-import { set } from "lodash";
+import SearchIcon from "@mui/icons-material/Search";
 
-function Board() {
-  const mode = localStorage.getItem("mode");
-  const [params] = useSearchParams();
-  let teamId = params.get("teamId");
-  const token = localStorage.getItem("token");
-  const currentUserName = localStorage.getItem("name");
-  const userId = localStorage.getItem("userId");
-  const [team, setTeam] = useState({});
-  const [user,setUser] = useState({});
-  const [openDialog, setOpenDialog] = useState(false);
-  const [selectedCard, setSelectedCard] = useState(null);
-  const [userStories, setUserStories] = useState([]);
-  const [project, setProject] = useState([{}]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const handleSnackbarClose = () => {
-    setSnackbarOpen(false);
-  };
+function BoardForSupervisor() {
+      const [search] = useSearchParams();
+      const teamId = search.get("teamId");
+      console.log(teamId);
+      const mode = localStorage.getItem("mode");
+      const token = localStorage.getItem("token");
+      const currentUserName = localStorage.getItem("name");
+      const userId = localStorage.getItem("userId");
+      const [team, setTeam] = useState({});
+      const [openDialog, setOpenDialog] = useState(false);
+      const [selectedCard, setSelectedCard] = useState(null);
+      const [userStories, setUserStories] = useState([]);
+      const [project, setProject] = useState([{}]);
+      const [searchQuery, setSearchQuery] = useState("");
+      const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchUserStories = async () => {
-      try {
-        setLoading(true);
-        const fetchedUser = await getUserById(userId, token);
-        console.log(fetchedUser);
-        setUser(fetchedUser);
-        if (fetchedUser.authorities.find((auth) => auth.authority === "ROLE_SUPERVISOR") !== undefined) {
-          console.log("here");
-          const fetchedTeam = await getTeamById(teamId , token);
-          console.log(fetchedUser);
-          console.log(fetchedTeam);
-          setTeam(fetchedTeam);
-          setProject(fetchedTeam.project);
-          console.log(fetchedTeam.project);
-          const fetchedUserStories = await getUserStories(
-            fetchedTeam.project.backlogId,
-            token
-          );
-          setUserStories(fetchedUserStories);
-        }else{
-          console.log("fuck");
-          teamId = fetchedUser.teamId;
-          if (teamId !== null) {
-            console.log(teamId );
-            const fetchedTeam = await getTeamById(teamId , token);
-            setTeam(fetchedTeam);
-            setProject(fetchedTeam.project);
-            console.log(fetchedTeam.project);
-            const fetchedUserStories = await getUserStories(
-              fetchedTeam.project.backlogId,
-              token
-            );
-            setUserStories(fetchedUserStories);
+      const [snackbarOpen, setSnackbarOpen] = useState(false);
+      const [snackbarMessage, setSnackbarMessage] = useState("");
+      const handleSnackbarClose = () => {
+        setSnackbarOpen(false);
+      };
+
+      useEffect(() => {
+        const fetchUserStories = async () => {
+          try {
+            setLoading(true);
+            if (teamId !== "null" && teamId !== undefined) {
+              console.log(teamId);
+              const fetchedTeam = await getTeamById(teamId, token);
+              setTeam(fetchedTeam);
+              const fetchedProject = await getProjectById(
+                fetchedTeam.projectId,
+                token
+              );
+              console.log(fetchedProject);
+              setProject(fetchedProject);
+              const fetchedUserStories = await getUserStories(
+                fetchedProject.backlogId,
+                token
+              );
+              setUserStories(fetchedUserStories);
+              setLoading(false);
+            } else {
+              throw new Error("User is not in a team");
+            }
+          } catch (error) {
+            console.error("Error fetching user stories: ", error);
+          } finally {
             setLoading(false);
-          } else {
-            throw new Error("User is not in a team");
           }
+        };
+        fetchUserStories();
+      }, [teamId]);
+
+      const handleCardDoubleClick = (args) => {
+        setSelectedCard(args.data); // Store the selected card data
+        setOpenDialog(true); // Open the dialog
+      };
+
+      const handleCloseDialog = () => {
+        setOpenDialog(false); // Close the dialog
+      };
+      const updateStoryStatus = (storyId, newStatus) => {
+        const newUserStory = { status: newStatus };
+        const updatedUserStory = updateUserStory(newUserStory, storyId, token);
+        console.log(`Updating story ${storyId} to status ${newStatus}`);
+      };
+
+      const swimlaneTemplate = (data) => {
+        console.log(data.textField);
+        if (data && data.keyField !== "") {
+          console.log(data);
+          return (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                padding: "5px",
+              }}
+            >
+              <Avatar {...stringAvatar(data.keyField, 30, 15)} />
+              <span>{data.keyField}</span>
+              <Typography variant="body3" color="textSecondary">
+                {data.count} items
+              </Typography>
+            </div>
+          );
         }
-      } catch (error) {
-        console.error("Error fetching user stories: ", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUserStories();
-  }, [teamId]);
+        return null;
+      };
 
-  const handleCardDoubleClick = (args) => {
-    setSelectedCard(args.data); // Store the selected card data
-    setOpenDialog(true); // Open the dialog
-  };
-
-  const handleCloseDialog = () => {
-    setOpenDialog(false); // Close the dialog
-  };
-  const updateStoryStatus = (storyId, newStatus) => {
-    const newUserStory = { status: newStatus };
-    const updatedUserStory = updateUserStory(newUserStory, storyId, token);
-    console.log(`Updating story ${storyId} to status ${newStatus}`);
-  };
-
-  const swimlaneTemplate = (data) => {
-    console.log(data.textField);
-    if (data && data.keyField !== "") {
-      console.log(data);
-      return (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "5px",
-            padding: "5px",
-          }}
-        >
-          <Avatar {...stringAvatar(data.keyField, 30, 15)} />
-          <span>{data.keyField}</span>
-          <Typography variant="body3" color="textSecondary">
-            {data.count} items
-          </Typography>
-        </div>
+      const filteredUserStories = userStories.filter(
+        (item) =>
+          item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.description.toLowerCase().includes(searchQuery.toLowerCase())
       );
-    }
-    return null;
-  };
-
-  const filteredUserStories = userStories && userStories.filter(
-    (item) =>
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-  };
-
-  return (
+      const handleSearchChange = (e) => {
+        setSearchQuery(e.target.value);
+      };
+  return teamId === "null" ? (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        paddingTop: "100px",
+        alignItems: "center",
+      }}
+    >
+      <img src="/src/assets/document.png" height={200} width={200} />
+      <Typography variant="h5" color="textSecondary" textAlign="center">
+        No team has taken this project yet
+      </Typography>
+      <Typography variant="body2" color="textSecondary" textAlign="center">
+        Please wait for the assignment to be done
+      </Typography>
+    </div>
+  ) : (
     <div
       className={mode === "dark" ? "dark-theme-kanban" : "light-theme-kanban"}
       style={{ display: "flex", flexDirection: "column", gap: "20px" }}
@@ -270,7 +250,7 @@ function Board() {
                 style={{
                   display: "flex",
                   flexDirection: "column",
-                  paddingTop: "60px",
+                  paddingTop: "100px",
                   alignItems: "center",
                 }}
               >
@@ -280,30 +260,15 @@ function Board() {
                   color="textSecondary"
                   textAlign="center"
                 >
-                  {Object.keys(user).length > 0 &&
-                  user.authorities.find(
-                    (auth) => auth.authority === "ROLE_SUPERVISOR"
-                  ) !== undefined
-                    ? "No user stories found"
-                    : "Get started in the backlog"}
+                  Get tarted in the backlog
                 </Typography>
                 <Typography
                   variant="body2"
                   color="textSecondary"
                   textAlign="center"
                 >
-                  {Object.keys(user).length > 0 &&
-                  user.authorities.find(
-                    (auth) => auth.authority === "ROLE_SUPERVISOR"
-                  ) !== undefined ? (
-                    "Wait for the team to add some user stories and start the sprint"
-                  ) : (
-                    <>
-                      Plan and start the sprint in the{" "}
-                      <Link to="/project/backlog">Backlog</Link> then come back
-                      here
-                    </>
-                  )}
+                  Plan and start the sprint in the{" "}
+                  <Link to="/project/backlog">Backlog</Link> then come back here
                 </Typography>
               </div>
             )
@@ -312,7 +277,7 @@ function Board() {
               style={{
                 display: "flex",
                 flexDirection: "column",
-                paddingTop: "60px",
+                paddingTop: "100px",
                 alignItems: "center",
               }}
             >
@@ -325,12 +290,7 @@ function Board() {
                 color="textSecondary"
                 textAlign="center"
               >
-                {Object.keys(user).length > 0 &&
-                user.authorities.find(
-                  (auth) => auth.authority === "ROLE_SUPERVISOR"
-                ) !== undefined
-                  ? "This team still don't have a project assigned to it"
-                  : "Wait until you're assigned to a project"}
+                Wait until you're assigned to a project
               </Typography>
             </div>
           )
@@ -345,24 +305,14 @@ function Board() {
           >
             <img src="/src/assets/team.png" height={200} width={200} />
             <Typography variant="h5" color="textSecondary" textAlign="center">
-              {Object.keys(user).length > 0 &&
-              user.authorities.find(
-                (auth) => auth.authority === "ROLE_SUPERVISOR"
-              ) !== undefined
-                ? "No team found for this project"
-                : "You are not in a team"}
+              You are not in a team
             </Typography>
             <Typography
               variant="body2"
               color="textSecondary"
               textAlign="center"
             >
-              {Object.keys(user).length > 0 &&
-              user.authorities.find(
-                (auth) => auth.authority === "ROLE_SUPERVISOR"
-              ) !== undefined
-                ? "Wait until the a team is assigned to this project"
-                : "Still have no team ,create one or wait till you're added to one"}
+              Still have no team ,create one or wait till you're added to one{" "}
             </Typography>
           </div>
         )
@@ -639,4 +589,4 @@ function Board() {
   );
 }
 
-export default Board;
+export default BoardForSupervisor

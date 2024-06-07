@@ -41,7 +41,6 @@ import { EmojiObjectsOutlined } from "@mui/icons-material";
 const mode = localStorage.getItem("mode");
 const isHOB = hasRole("ROLE_HEAD_OF_BRANCH");
 function Projects() {
-  console.log("rerender");
   const [users, setUsers] = useState([]);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -101,18 +100,18 @@ function Projects() {
   const token = localStorage.getItem("token");
 
   const cardColors = [
-    mode === "dark" ? "rgba(173, 216, 230, 0.2)" : "rgba(173, 216, 230, 0.4)",
-    mode === "dark" ? "rgba(216, 191, 216, 0.2)" : "rgba(216, 191, 216, 0.4)",
-    mode === "dark" ? "rgba(144, 238, 144, 0.2)" : "rgba(144, 238, 144, 0.4)",
-    mode === "dark" ? "rgba(255, 255, 153, 0.2)" : "rgba(255, 255, 153, 0.4)",
-    mode === "dark" ? "rgba(255, 204, 153, 0.2)" : "rgba(255, 204, 153, 0.4)",
-    mode === "dark" ? "rgba(255, 182, 193, 0.2)" : "rgba(255, 182, 193, 0.4)",
-    mode === "dark" ? "rgba(255, 0, 0, 0.2)" : "rgba(255, 0, 0, 0.4)",
-    mode === "dark" ? "rgba(0, 255, 0, 0.2)" : "rgba(0, 255, 0, 0.4)",
-    mode === "dark" ? "rgba(0, 0, 255, 0.2)" : "rgba(0, 0, 255, 0.4)",
-    mode === "dark" ? "rgba(255, 255, 0, 0.2)" : "rgba(255, 255, 0, 0.4)",
-    mode === "dark" ? "rgba(255, 0, 255, 0.2)" : "rgba(255, 0, 255, 0.4)",
-    mode === "dark" ? "rgba(0, 255, 255, 0.2)" : "rgba(0, 255, 255, 0.4)",
+    mode === "dark" ? "rgba(173, 216, 230, 0.2)" : "rgba(173, 216, 230, 0.3)",
+    mode === "dark" ? "rgba(216, 191, 216, 0.2)" : "rgba(216, 191, 216, 0.3)",
+    mode === "dark" ? "rgba(144, 238, 144, 0.2)" : "rgba(144, 238, 144, 0.3)",
+    mode === "dark" ? "rgba(255, 255, 153, 0.2)" : "rgba(255, 255, 153, 0.3)",
+    mode === "dark" ? "rgba(255, 204, 153, 0.2)" : "rgba(255, 204, 153, 0.3)",
+    mode === "dark" ? "rgba(255, 182, 193, 0.2)" : "rgba(255, 182, 193, 0.3)",
+    mode === "dark" ? "rgba(255, 0, 0, 0.2)" : "rgba(255, 0, 0, 0.3)",
+    mode === "dark" ? "rgba(0, 255, 0, 0.2)" : "rgba(0, 255, 0, 0.3)",
+    mode === "dark" ? "rgba(0, 0, 255, 0.2)" : "rgba(0, 0, 255, 0.3)",
+    mode === "dark" ? "rgba(255, 255, 0, 0.2)" : "rgba(255, 255, 0, 0.3)",
+    mode === "dark" ? "rgba(255, 0, 255, 0.2)" : "rgba(255, 0, 255, 0.3)",
+    mode === "dark" ? "rgba(0, 255, 255, 0.2)" : "rgba(0, 255, 255, 0.3)",
   ];
 
   useEffect(() => {
@@ -225,11 +224,27 @@ function Projects() {
         <BreadCrumb
           items={[{ label: "Home", link: "/" }, { label: "Projects" }]}
         />
-        <PlaceHolder
-          icon={DeveloperBoardOffIcon}
-          title="No Projects Yet"
-          message="no projects published at the moment"
-        />
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            paddingTop: "100px",
+            alignItems: "center",
+          }}
+        >
+          <img
+            src="/src/assets/telescope.png"
+            height={200}
+            width={200}
+            style={{ marginBottom: "10px" }}
+          />
+          <Typography variant="h5" color="textSecondary" textAlign="center">
+            There are no projects to show
+          </Typography>
+          <Typography variant="body2" color="textSecondary" textAlign="center">
+            Please wait for the projects to be generated
+          </Typography>
+        </div>
       </>
     );
   } else {
@@ -382,7 +397,7 @@ function Projects() {
                             component="h2"
                             fontWeight={600}
                             onClick={() => {
-                              navigate(`/projects/${Pro.id}`);
+                              navigate(`/dashboard/projects/${Pro.id}`);
                             }}
                           >
                             {Pro.title.substring(0, 20)}
@@ -460,7 +475,7 @@ function Projects() {
         >
           <MenuItem
             onClick={() => (
-              navigate(`/projects/${selectedProject.id}`), handleClose()
+              navigate(`/dashboard/projects/${selectedProject.id}`), handleClose()
             )}
           >
             View

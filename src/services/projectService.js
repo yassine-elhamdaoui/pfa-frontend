@@ -71,6 +71,34 @@ export const getAllProjects = async (token,years,pageNumber,pageSize) => {
       console.log(projects);
     return projects;
 }
+export const getAllProjectsForCurrentYear = async (token) => {
+    let academicYear 
+          const year = new Date().getFullYear();
+          const month = new Date().getMonth();
+          if (month >= 9 && month <= 12) {
+            academicYear = `${year}/${year + 1}`;
+          } else if (month >= 1 && month <= 7) {
+            academicYear = `${year - 1}/${year}`;
+          }
+    console.log(academicYear);
+    const projects = await fetch(
+      `http://localhost:8080/api/projects/all?academicYear=${academicYear}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    )
+      .then((response) => response.json())
+      .catch((error) => {
+        console.error("Error fetching data:", error);
+        throw error;
+      });
+      console.log(projects);
+    return projects;
+}
 export const getAllPreferences = async (token) => {
     const preferences = await fetch("http://localhost:8080/api/projects/preferences", {
         method: "GET",
@@ -85,6 +113,48 @@ export const getAllPreferences = async (token) => {
         throw new Error("Failed to fetch preferences");
     }
 }
+export const updateProjectPreferences = async (
+  token,
+  preferences,
+  setSnackbarOpen,
+  setSnackbarMessage
+) => {
+  const response = await fetch(
+    "http://localhost:8080/api/projects/preferences",
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(preferences),
+    }
+  );
+  if (response.ok) {
+    setSnackbarMessage("Preferences updated successfully");
+    setSnackbarOpen(true);
+    return await response.json();
+  } else {
+    setSnackbarMessage("Failed to update preferences");
+    setSnackbarOpen(true);
+    throw new Error("Failed to update preferences");
+  }
+};
+export const getTeamPreferences = async (teamId,token) => { 
+    const preferences = await fetch(`http://localhost:8080/api/projects/preferences/team?teamId=${teamId}`, {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+        },
+    })
+    if (preferences.ok) {
+        return await preferences.json();
+    } else {
+        throw new Error("Failed to fetch preferences");
+    }
+}
+
 
 export const makeAssignment = async (
   token,
@@ -118,9 +188,16 @@ export const makeAssignment = async (
 };
 
 export const getAssignment = async (token) => {
-  console.log(new Date().getFullYear());
+      let academicYear;
+      const year = new Date().getFullYear();
+      const month = new Date().getMonth();
+      if (month >= 9 && month <= 12) {
+        academicYear = `${year}/${year + 1}`;
+      } else if (month >= 1 && month <= 7) {
+        academicYear = `${year - 1}/${year}`;
+      }
   const assignment = await fetch(
-    `http://localhost:8080/api/assignments?year=${new Date().getFullYear()}`,
+    `http://localhost:8080/api/assignments?academicYear=${academicYear}`,
     {
       method: "GET",
       headers: {
@@ -245,6 +322,7 @@ export const getAcademicYear = async(token)=>{
     }
   );
   if (response.ok) {
+    // console.log(await response.json());
     return await response.json();
   } else {
     throw new Error("Error rejecting project");

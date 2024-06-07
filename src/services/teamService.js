@@ -1,11 +1,11 @@
 
-export const getAllTeams = async (token) => {
+export const getAllTeams = async (token,academicYear) => {
     const branchId = localStorage.getItem("branchId");
     const studiedBranchId = localStorage.getItem("studiedBranchId");
 
-    const selectedBranchId = branchId !== "null" ? branchId : studiedBranchId;
+    const selectedBranchId = branchId !== "null" ? branchId : studiedBranchId === "null" ? 1 : studiedBranchId;
 
-    const allTeams = await fetch("http://localhost:8080/api/teams", {
+    const allTeams = await fetch("http://localhost:8080/api/teams?academicYear="+academicYear, {
         method: "GET",
         headers: {
             Authorization: `Bearer ${token}`,
@@ -27,6 +27,7 @@ export const getAllTeams = async (token) => {
 // teamService.js
 
 const createTeam = async (teamData, token, setSnackbarOpen, setSnackbarMessage) => {
+  console.log(teamData);
     try {
         const response = await fetch('http://localhost:8080/api/teams', {
             method: 'POST',
@@ -67,6 +68,7 @@ const getTeamById = async (teamId, token) => {
       },
     });
     if (!response.ok) {
+      console.log(await response.json());
       throw new Error("Failed to fetch team");
     }
     const team = await response.json();

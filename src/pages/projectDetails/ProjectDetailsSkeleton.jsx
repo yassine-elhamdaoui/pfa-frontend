@@ -25,7 +25,7 @@ function ProjectDetailsSkeleton() {
           sx={{ display: "flex", flexDirection: "column", gap: "20px" }}
         >
           <Paper
-            elevation={3}
+            elevation={0}
             sx={{
               padding: "10px",
               display: "flex",
@@ -47,7 +47,7 @@ function ProjectDetailsSkeleton() {
           </Paper>
           <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
             <Paper
-              elevation={3}
+              elevation={0}
               sx={{
                 borderRadius: "5px",
                 padding: "10px",
@@ -68,7 +68,7 @@ function ProjectDetailsSkeleton() {
               />
             </Paper>
             <Paper
-              elevation={3}
+              elevation={0}
               sx={{
                 borderRadius: "5px",
                 padding: "10px",
@@ -89,7 +89,7 @@ function ProjectDetailsSkeleton() {
               />
             </Paper>
             <Paper
-              elevation={3}
+              elevation={0}
               sx={{
                 borderRadius: "5px",
                 padding: "10px",
@@ -161,7 +161,7 @@ function ProjectDetailsSkeleton() {
         </Grid>
         <Grid item xs={12} md={5} lg={4}>
           <Paper
-            elevation={3}
+            elevation={0}
             sx={{
               padding: "15px",
               display: "flex",

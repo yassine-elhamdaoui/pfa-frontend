@@ -26,6 +26,9 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { stringAvatar } from "../../utils/generalUtils";
 import { StyledDialog, StyledDialogContent, StyledGrid, VisuallyHiddenInput } from "./createProjectDialog";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import { hasRole } from "../../utils/userUtiles";
+import { getAllTeams } from "../../services/teamService";
+import { set } from "lodash";
 const lightColors = [
    "rgba(173, 216, 230, 0.5)",
    "rgba(216, 191, 216, 0.5)",
@@ -158,8 +161,10 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
     },
   ]);
   const mode = localStorage.getItem("mode");
+  const isHOB = hasRole("ROLE_HEAD_OF_BRANCH");
   const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("sm"));
   const [supervisors, setSupervisors] = useState([]);
+  const [teams , setTeams] = useState([]);
   const [projectType, setProjectType] = useState("old");
   const [formData, setFormData] = useState({
     title: "",
@@ -171,6 +176,7 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
     supervisors: [],
     files: [],
     report: null,
+    team: null,
   });
   const [loading, setLoading] = useState(false);
 
@@ -181,6 +187,7 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
   useEffect(() => {
     async function fetchData() {
       const users = await getUsers(token);
+      const fetchedTeams = await getAllTeams(token);
       setSupervisors(
         users.filter(
           (user) =>
@@ -190,6 +197,7 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
             )
         )
       );
+      setTeams(fetchedTeams.filter((team) => team.projectId === null));
     }
     fetchData();
   }, []);
@@ -218,6 +226,12 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
       techStack: value,
     }));
   };
+  const handleTeamChange = (event, value) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      team: value,
+    }));
+  };
 
   const handleSupervisorsChange = (event, value) => {
     setFormData((prevFormData) => ({
@@ -228,6 +242,7 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
 
   const handleFilesChange = (event) => {
     const files = event.target.files;
+    console.log(files);
     const uploadedFilesList = Array.from(files).map((file) => ({
       name: file.name,
       size: file.size,
@@ -281,6 +296,11 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
     }
     data.append("academicYear",formData.academicYear)
     data.append("branch", formData.branch);
+    if (formData.team && formData.team.id !== null) {
+      data.append("team",formData.team.id);
+    }else{
+      data.append("team", null)
+    }
     data.append(
       "supervisors",
       formData.supervisors.map((supervisor) => supervisor.id)
@@ -422,6 +442,32 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
               )}
             />
           </Grid>
+          {/* Team stuff */}
+          {isHOB && (
+            <Grid item xs={12}>
+              <Autocomplete
+                id="team"
+                options={teams}
+                getOptionLabel={(option) => option.name}
+                renderOption={(props, option) => (
+                  <li {...props}>
+                    <div style={{display:"flex",flexDirection:"column"}}>
+                      <p>{option.name}</p>
+                      <Typography color="textSecondary" variant="body2">{option.responsible.email}</Typography>
+                    </div>
+                  </li>
+                )}
+                onChange={handleTeamChange}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Team"
+                    placeholder="Select Team"
+                  />
+                )}
+              />
+            </Grid>
+          )}
           {/* Supervisors */}
           <Grid item xs={12}>
             <Autocomplete

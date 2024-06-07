@@ -48,7 +48,15 @@ function Assignments({ mode }) {
   useEffect(() => {
     const fetchTeamsAndPreferences = async () => {
       try {
-        const fetchedTeams = await getAllTeams(token);
+                let academicYear;
+                const year = new Date().getFullYear();
+                const month = new Date().getMonth();
+                if (month >= 9 && month <= 12) {
+                  academicYear = `${year}/${year + 1}`;
+                } else if (month >= 1 && month <= 7) {
+                  academicYear = `${year - 1}/${year}`;
+                }
+        const fetchedTeams = await getAllTeams(token, academicYear);
         const fetchedPreferences = await getAllPreferences(token);
         const fetchedAssignment = await getAssignment(token);
         setTeams(fetchedTeams);
@@ -98,7 +106,7 @@ function Assignments({ mode }) {
 
   const handleViewPreferences = (teamId) => {
     console.log(teamId);
-    navigate(`/project/team/${teamId}/preferences`);
+    navigate(`/dashboard/project/team/${teamId}/preferences`);
   };
 
   const columns = [
@@ -233,7 +241,7 @@ function Assignments({ mode }) {
               {Object.keys(assignment).length !== 0 ? (
                 <Button
                   variant="outlined"
-                  onClick={() => navigate("/assignments/result")}
+                  onClick={() => navigate("/dashboard/assignments/result")}
                 >
                   View assignment
                 </Button>

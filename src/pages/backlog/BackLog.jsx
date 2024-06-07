@@ -1,9 +1,10 @@
-import React from 'react'
+import { useSearchParams } from 'react-router-dom';
 
 function BackLog() {
-  return (
-    <div>BackLog</div>
-  )
+  const [searchParams] = useSearchParams();
+  const projectId = searchParams.get("projectId");
+  console.log(projectId);
+  return <div>BackLog</div>;
 }
 
 export default BackLog

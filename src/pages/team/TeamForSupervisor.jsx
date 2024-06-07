@@ -15,33 +15,37 @@ import {
   List,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { getTeamById } from "../../services/teamService";
 import BreadCrumb from "../../components/breadCrumb/BreadCrumb";
 import { stringAvatar } from "../../utils/generalUtils";
 import BadgeIcon from "@mui/icons-material/Badge";
-import { hasRole } from "../../utils/userUtiles";
-import { getAllPreferences, getAllProjects, getAssignment, getTeamPreferences } from "../../services/projectService";
+import {
+  getAllProjects,
+  getAssignment,
+  getTeamPreferences,
+} from "../../services/projectService";
 import CommentsDisabledIcon from "@mui/icons-material/CommentsDisabled";
 import MakePreferencesDialog from "../../components/dialogs/MakePreferencesDialog";
 import StarBorderPurple500Icon from "@mui/icons-material/StarBorderPurple500";
 import TeamSkeleton from "./TeamSkeleton";
 import { useTheme } from "@mui/material/styles";
+import { hasRole } from "../../utils/userUtiles";
 
-
-const isResponsible = hasRole("ROLE_RESPONSIBLE");
-function Team() {
-  const theme = useTheme();
-  const token = localStorage.getItem("token");
-  const teamId = localStorage.getItem("team");
-  const userId = localStorage.getItem("userId");
-  const mode = localStorage.getItem("mode");
-  const navigate = useNavigate();
-  const [team, setTeam] = useState({});
-  const [preferences, setPreferences] = useState([]);
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [assignment, setAssignment] = useState({})
+function TeamForSupervisor() {
+    const isResponsible = hasRole("ROLE_RESPONSIBLE");
+    const [params] = useSearchParams();
+    const teamId = params.get("teamId");
+      const theme = useTheme();
+      const token = localStorage.getItem("token");
+      const userId = localStorage.getItem("userId");
+      const mode = localStorage.getItem("mode");
+      const navigate = useNavigate();
+      const [team, setTeam] = useState({});
+      const [preferences, setPreferences] = useState([]);
+      const [projects, setProjects] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [assignment, setAssignment] = useState({});
 
       const [snackbarOpen, setSnackbarOpen] = useState(false);
       const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -49,49 +53,52 @@ function Team() {
         setSnackbarOpen(false);
       };
 
+      const [preferencesDialogOpen, setPreferencesDialogOpen] = useState(false);
+      const handleDialogClose = () => {
+        setPreferencesDialogOpen(false);
+      };
 
-  const [preferencesDialogOpen, setPreferencesDialogOpen] = useState(false);
-  const handleDialogClose = () => {
-    setPreferencesDialogOpen(false);
-  };
+      const handleMakePreferencesClicked = () => {
+        setPreferencesDialogOpen(true);
+      };
 
-  const handleMakePreferencesClicked = () => {
-    setPreferencesDialogOpen(true);
-  }
-
-
-
-  useEffect(() => {
-    const fetchTeam = async () => {
-      try {
-        setLoading(true);
-        const fetchedTeam = await getTeamById(teamId, token);
-        const fetchedPreferences = await getTeamPreferences(teamId,token);
-        const fetchedProjects = await getAllProjects(token,undefined,undefined,20);
-        const fetchedAssignment = await getAssignment(token);
-        setProjects(fetchedProjects);
-        setTeam(fetchedTeam);
-        setPreferences(fetchedPreferences);
-        setAssignment(fetchedAssignment);
-        console.log(fetchedAssignment);
-        console.log(fetchedTeam);
-        console.log(fetchedPreferences);
-        console.log(fetchedProjects);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching team:", error);
-        setLoading(false);
-      }
-    };
-    if (teamId !== "undefined" && teamId !== "null") {
-      fetchTeam();
-    }else {
-      setLoading(false)
-
-    }
-  }, []);
-
-  return loading ? (
+      useEffect(() => {
+        const fetchTeam = async () => {
+          try {
+            setLoading(true);
+            const fetchedTeam = await getTeamById(teamId, token);
+            const fetchedPreferences = await getTeamPreferences(teamId, token);
+            const fetchedProjects = await getAllProjects(
+              token,
+              undefined,
+              undefined,
+              20
+            );
+            const fetchedAssignment = await getAssignment(token);
+            setProjects(fetchedProjects);
+            setTeam(fetchedTeam);
+            setPreferences(fetchedPreferences);
+            setAssignment(fetchedAssignment);
+            console.log(fetchedAssignment);
+            console.log(fetchedTeam);
+            console.log(fetchedPreferences);
+            console.log(fetchedProjects);
+            setLoading(false);
+          } catch (error) {
+            console.error("Error fetching team:", error);
+            setLoading(false);
+          }
+        };
+        if (teamId !== "undefined" && teamId !== "null") {
+            fetchTeam();
+        } else {
+            console.log("here");
+          setLoading(false);
+        }
+      }, [teamId]);
+  return teamId === "undefined" || teamId === "null" ? (
+    <>no team for this project yet</>
+  ) : loading ? (
     <TeamSkeleton />
   ) : Object.keys(team).length > 0 ? (
     <div>
@@ -198,9 +205,7 @@ function Team() {
                           <ListItem
                             key={index}
                             alignItems="flex-start"
-                            onClick={() =>
-                              navigate(`/dashboard/projects/${projectId}`)
-                            }
+                            onClick={() => navigate(`/projects/${projectId}`)}
                             sx={{
                               cursor: "pointer",
                               borderTop: `solid 0.2px `,
@@ -316,28 +321,8 @@ function Team() {
       </Snackbar>
     </div>
   ) : (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        paddingTop: "100px",
-        alignItems: "center",
-      }}
-    >
-      <img
-        src="/src/assets/team.png"
-        height={200}
-        width={200}
-        style={{ marginBottom: "10px" }}
-      />
-      <Typography variant="h5" color="textSecondary" textAlign="center">
-        No team found
-      </Typography>
-      <Typography variant="body2" color="textSecondary" textAlign="center">
-        Please make sure you have selected a team
-      </Typography>
-    </div>
+    <>no team yet</>
   );
 }
 
-export default Team;
+export default TeamForSupervisor;

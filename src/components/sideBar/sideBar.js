@@ -6,10 +6,8 @@ export const StyledDrawer = styled(Drawer)(({ theme }) => ({
     boxSizing: "border-box",
     marginTop: "64px",
     maxHeight: "calc(100svh - 64px)",
-    [theme.breakpoints.down("sm")]: {
-      marginTop: "55px",
-      maxHeight: "calc(100svh - 55px)",
-    },
+
+    backgroundColor: localStorage.getItem("mode") === "light" ? "#f5f6fa" : "#121212",
     padding: "5px",
     zIndex: 1000,
     width: drawerWidth,
