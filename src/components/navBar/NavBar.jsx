@@ -33,6 +33,8 @@ import CreateProjectDialog from "../dialogs/CreateProjectDialog";
 import CreateTeamDialog from "../dialogs/CreateTeamDialog";
 import Notifications from "../notification/Notifications";
 import { Search, SearchIconWrapper, StyledInputBase } from "./navBar";
+import ProfilePopover from "../profilePopover/ProfilePopover"; 
+
 
 // eslint-disable-next-line react/prop-types
 export default function NavBar({ handleDrawerOpen, setMode }) {
@@ -47,6 +49,8 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [anchorEl2, setAnchorEl2] = useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
+  const [profilePopoverOpen, setProfilePopoverOpen] = useState(false);//////usestate pour item profile
+  const [profileAnchorEl, setProfileAnchorEl] = useState(null); ////////////anchore1 pour profil
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -156,6 +160,19 @@ const handleDeleteNotification = async (notificationId, notificationType) => {
   const isStudent = hasRole("ROLE_STUDENT");
   const isHOB = hasRole("ROLE_HEAD_OF_BRANCH");
 
+
+  const handleProfileClick = (event) => {
+    setProfileAnchorEl(event.currentTarget);
+    setProfilePopoverOpen(true);
+    handleMenuClose(); 
+  };
+  
+  const handleProfilePopoverClose = () => {
+    setProfilePopoverOpen(false);
+    setProfileAnchorEl(null);
+  
+  };
+
   const handleAddTeamButtonClicked = () => {
     setTeamDialogOpen(true);
   };
@@ -219,7 +236,7 @@ const handleDeleteNotification = async (notificationId, notificationType) => {
       open={isMenuOpen}
       onClose={handleMenuClose}
     >
-      <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
+      <MenuItem onClick={handleProfileClick}>Profile</MenuItem>
       <MenuItem onClick={handleMenuClose}>My account</MenuItem>
       {window.screen.width >= 900 ? (
         <MenuItem onClick={(event) => setAnchorEl2(event.currentTarget)}>
@@ -484,6 +501,13 @@ const handleDeleteNotification = async (notificationId, notificationType) => {
           </Box>
         </Toolbar>
       </Box>
+
+      {profilePopoverOpen && <ProfilePopover
+        anchorEl={profileAnchorEl}
+        open={profilePopoverOpen}
+        onClose={handleProfilePopoverClose}
+      />}
+
       {renderMobileMenu}
       {renderMenu}
       {renderModeMenu}

@@ -33,4 +33,25 @@ const getUserById = async (userId, token) => {
     throw error;
   }
 }
-export { getUsers , getUserById};
+
+const updateUserById = async (userId, updatedUserData, token) => {
+  try {
+    const response = await fetch(`http://localhost:8080/api/users/${userId}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updatedUserData),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to update user");
+    }
+    const updatedUser = await response.json();
+    return updatedUser;
+  } catch (error) {
+    console.error("Error updating user:", error);
+    throw error;
+  }
+};
+export { getUsers , getUserById, updateUserById};
