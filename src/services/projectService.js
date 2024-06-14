@@ -17,6 +17,26 @@ export default async function createProject(token, data, setSnackbarOpen, setSna
     return await response.json();
   }
 } 
+export const updateProject = async (token, projectId, data, setSnackbarOpen, setSnackbarMessage) => {
+  const response = await fetch(`http://localhost:8080/api/projects/${projectId}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: data,
+  });
+  if (response.ok) {
+    setSnackbarMessage("Project updated successfully");
+    setSnackbarOpen(true);
+    return await response.json();
+  } else {
+    setSnackbarMessage("Failed to update project");
+    setSnackbarOpen(true);
+    return await response.json();
+  }
+}
+
+
 export const getProjectById = async (projectId, token) => {
     try {
       const response = await fetch(

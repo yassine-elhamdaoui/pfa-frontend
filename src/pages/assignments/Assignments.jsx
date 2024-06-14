@@ -185,7 +185,7 @@ function Assignments({ mode }) {
         params.row.hasPreferences ? (
           <Button
             variant="outlined"
-            onClick={() => handleViewPreferences(params.row.id)}
+            onClick={() => navigate(`/dashboard/teams/${params.row.id}`)}
           >
             View
           </Button>

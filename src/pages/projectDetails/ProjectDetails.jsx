@@ -16,6 +16,7 @@ import { stringAvatar, stringToColor } from "../../utils/generalUtils";
 import { hasRole } from "../../utils/userUtiles";
 import ProjectDetailsSkeleton from "./ProjectDetailsSkeleton";
 import Groups2Icon from "@mui/icons-material/Groups2";
+import EditProjectDialog from '../../components/dialogs/EditProjectDialog';
 
 
 
@@ -34,16 +35,33 @@ function ProjectDetails() {
   const [projectTeam, setProjectTeam] = useState({});
   const [documents, setDocuments] = useState([]);
   const [report, setReport] = useState(null); 
+  const [editProjectDialogOpen, setEditProjectDialogOpen] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
+    const handleModalClose = () => {
+      setEditProjectDialogOpen(false);
+    };
 
+
+  const isSupervisor = hasRole("ROLE_SUPERVISOR")
+  console.log(isSupervisor);
+  const isHOB = hasRole("ROLE_HEAD_OF_BRANCH")
   useEffect(() => {
     const fetchData = async () => {
       try {
         const fetchedUser = await getUserById(userId, token);
-        const fetchedTeam = await getTeamById(fetchedUser.teamId, token);
+        let fetchedTeam
+        if (fetchedUser.teamId !== null) {
+          fetchedTeam = await getTeamById(fetchedUser.teamId, token);
+        }
         setUser(fetchedUser);
         const fetchedProject = await getProjectById(id, token);
         console.log(fetchedProject);
         setProject(fetchedProject);
+      
 
         const supervisorPromises = fetchedProject.supervisorIds.map((supervisorId) =>
         getUserById(supervisorId, token)
@@ -127,6 +145,7 @@ function ProjectDetails() {
             <Button
               component={Link}
               variant="text"
+              onClick={()=>setEditProjectDialogOpen(true)}
               startIcon={<BorderColorOutlinedIcon />}
             >
               Edit
@@ -381,10 +400,14 @@ function ProjectDetails() {
                 </Typography>
               </div>
             )}
+
             {project.codeLink &&
+              ((team &&
               Object.keys(team).length > 0 &&
               Object.keys(project).length > 0 &&
-              team.id === project.teamId && (
+              team.id === project.teamId) ||
+              (isSupervisor && project.supervisorIds.includes(user.id)) ||
+              isHOB) && (
                 <>
                   <BreadCrumb
                     items={[{ label: "Code Repository", link: "#" }]}
@@ -415,6 +438,13 @@ function ProjectDetails() {
           </Paper>
         </Grid>
       </Grid>
+      <EditProjectDialog 
+          editProjectDialogOpen={editProjectDialogOpen}
+          handleModalClose={handleModalClose}
+          setSnackbarOpen={setSnackbarOpen}
+          setSnackbarMessage={setSnackbarMessage}
+          project={project}
+        />
     </div>
   );
 }

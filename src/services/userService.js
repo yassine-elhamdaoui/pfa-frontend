@@ -33,4 +33,20 @@ const getUserById = async (userId, token) => {
     throw error;
   }
 }
-export { getUsers , getUserById};
+
+const getSupervisors = async (token) => {
+  const supervisors = await fetch("http://localhost:8080/api/users/supervisors", {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  })
+    .then((response) => response.json())
+    .catch((error) => {
+      console.error("Error fetching data:", error);
+      throw error;
+    });
+  return supervisors;
+};
+export { getUsers , getUserById, getSupervisors};

@@ -206,6 +206,7 @@ function Docs() {
     fetchData();
     initialRender.current = false; 
   }, [render,projectId]);
+
   const handleFolderClicked = (folder) => () => {
     setOpenedFolder(folder);
     setActiveFiles(folder.documents);

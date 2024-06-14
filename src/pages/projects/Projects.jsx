@@ -333,7 +333,7 @@ function Projects() {
                 </Typography>
               </Box>
             )}
-            {projects.map((Pro, index) => (
+            {projects.length > 0 && projects.map((Pro, index) => (
               <Grid
                 item
                 xs={12}

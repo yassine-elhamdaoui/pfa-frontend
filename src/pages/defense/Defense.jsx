@@ -1,6 +1,5 @@
 /* eslint-disable react/prop-types */
 import {
-  Agenda,
   Day,
   DragAndDrop,
   Inject,
@@ -8,174 +7,529 @@ import {
   ScheduleComponent,
   Week,
   WorkWeek,
-  cellClick,
-  popupClose,
 } from "@syncfusion/ej2-react-schedule";
 import { DropDownList, MultiSelect } from "@syncfusion/ej2-dropdowns";
-import { createElement, useEffect, useState } from "react";
-import { Button, Grid, Paper, TextField } from "@mui/material";
+import {  useEffect, useRef, useState } from "react";
+import { getSupervisors } from "../../services/userService";
+import { getAllTeams } from "../../services/teamService";
+import { addPresentationsPlan, createPresentation, deletePresentation, getAllPresentations, getPresentationsPlan, updatePresentation, updatePresentationOnDrag, validatePresentationsPlan } from "../../services/presentaionService";
+import BreadCrumb from "../../components/breadCrumb/BreadCrumb";
+import "./defense.scss";
+import { Button, Typography } from "@mui/material";
+import { hasRole } from "../../utils/userUtiles";
+import DefenseSkeleton from "./DefenseSkeleton";
+import ConfirmationDialog from "../../components/dialogs/ConfirmationDialog";
 
+const token = localStorage.getItem("token");
 function Defense() {
+  const isSupervisor = hasRole("ROLE_SUPERVISOR");
+  const isHOB = hasRole("ROLE_HEAD_OF_BRANCH");
+  const isStudent = hasRole("ROLE_STUDENT");
+  const mode = localStorage.getItem("mode")
   const [events, setEvents] = useState([]);
+  const [supervisors, setSupervisors] = useState([]);
+  const [teams, setTeams] = useState([]);
+  const [loading,setLoading] = useState(false); 
+  const [render , setRender] = useState(false);
 
+  const [confirmationOpenDialog, setConfirmationOpenDialog] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+
+  const initialRender = useRef(true);
+
+  const [presentationsPlan, setPresentationsPlan] = useState({});
   useEffect(() => {
     const fetchEvents = async () => {
+      if (initialRender.current) {
+        setLoading(true);
+      }
       try {
-        const response = await fetch(
-          "http://localhost:8080/api/presentations",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: "Bearer " + localStorage.getItem("token"),
-            },
-          }
+        const fetchedSupervisors = await getSupervisors(token);
+        const fetchedTeams = await getAllTeams(token);
+        const teamsWithNoPresentation = fetchedTeams.filter(
+          (team) => team.presentation === null
         );
-        console.log(await response.json());
-        if (!response.ok) {
-          throw new Error("Failed to fetch events");
-        }
-        const data = await response.json();
-        setEvents(data.map(capitalizeFirstLetter));
+        console.log(teamsWithNoPresentation);
+        const fetchedPresentations = await getAllPresentations(token);
+        console.log(supervisors);
+        setSupervisors(fetchedSupervisors);
+        setTeams(teamsWithNoPresentation);
+        setEvents(fetchedPresentations);
+        const fetchedPresentationsPlan = await getPresentationsPlan(token);
+        console.log(fetchedPresentationsPlan);
+        setPresentationsPlan(fetchedPresentationsPlan);
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching events:", error);
+      }finally{
+        if (!initialRender.current) {
+          setLoading(false);
+        }
       }
     };
 
     fetchEvents();
-  }, []);
+    initialRender.current = false; 
+
+  }, [render]);
   const handleDragStop = async (data) => {
-    try {
-      const response = await fetch(
-        "http://localhost:8080/api/presentations/" + data.Id,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + localStorage.getItem("token"),
-          },
-          body: JSON.stringify({
-            startTime: data.StartTime,
-            endTime: data.EndTime,
-          }),
+    const updatedEvent = await updatePresentationOnDrag(token, data);
+  };
+  const handleCreatePresentation = async (data) => {
+    const createdEvent = await createPresentation(token, data,setRender);
+  };
+  const handleEditPresentation = async (data) => {
+    const updatedEvent = await updatePresentation(token, data,setRender);
+  };
+  const handleDeletePresentation = async (data) => {
+    const response = await deletePresentation(token, data,setRender);
+  };
+
+
+
+
+    const onPopupOpen = (args) => {
+      if (args.type === "Editor") {
+        mode === "dark" ? args.element.classList.add("custom-popup") : args.element.classList.remove("custom-popup");
+
+        const container = args.element.querySelector(".e-schedule-form");
+        if (container) {
+          // Remove unwanted elements if they exist
+          const repeatRow = container.querySelector(
+            ".e-float-input.e-control-wrapper.e-input-group.e-ddl.e-lib.e-keyboard.e-valid-input"
+          );
+          repeatRow && (repeatRow.style.display = "none");
+          const checkboxesRow = container.querySelector(".e-all-day-time-zone-row");
+          checkboxesRow && (checkboxesRow.style.display = "none");
+          const descriptionRow = container.querySelector(".e-description-row");
+          descriptionRow && descriptionRow.remove();
+          const titleRow = container.querySelector(".e-subject-container");
+          titleRow && titleRow.remove();
+          const locationContainer = container.querySelector(
+            ".e-location-container"
+          );
+          if (locationContainer) {
+            locationContainer.style.width = "100%";
+            locationContainer.style.padding = "0";
+          }
+
+          // Add custom fields for Team and Jury Members
+          let teamField = container.querySelector(
+            ".custom-team-field .e-dropdownlist"
+          );
+          if (!teamField) {
+            teamField = document.createElement("div");
+            teamField.className = "custom-team-field";
+            teamField.innerHTML = `
+              <label class="e-label">Team</label>
+              <input class="e-field e-dropdownlist" name="Subject" />
+              <input type="hidden" class="e-field" name="TeamId" />
+            `;
+            container.appendChild(teamField);
+            // Initialize DropDownList for Team field
+            console.log(teams);
+            new DropDownList({
+              cssClass: mode === "dark" ? "custom-dropdown" : "",
+              dataSource: teams.map((team) => team.name), // Replace with your data
+              placeholder: "Select Team",
+              value: args.data.Team, // Set initial value
+              change: (e) => {
+                if (!e.value) {
+                  args.data.Team = "";
+                  args.data.TeamId = "";
+                  teamField.querySelector(
+                    'input[name="TeamId"]'
+                  ).value = "";
+                }else{
+                  const selectedTeam = teams.filter(
+                    (team) =>
+                      e.value.includes(
+                        `${team.name}`
+                      )
+                  );
+                  const selectedTeamId = selectedTeam.map(
+                    (team) => team.id
+                  );
+                  teamField.querySelector(
+                    'input[name="TeamId"]'
+                  ).value = selectedTeamId;
+                    args.data.TeamId = e.value;
+                  }
+
+                }
+            }).appendTo(teamField.querySelector("input"));
+          }
+
+          let juryMembersField = container.querySelector(
+            ".custom-jury-field .e-multiselect"
+          );
+          if (!juryMembersField) {
+            juryMembersField = document.createElement("div");
+            juryMembersField.className = "custom-jury-field";
+            juryMembersField.style.marginTop = "10px";
+            juryMembersField.innerHTML = `
+              <label class="e-label">Jury Members</label>
+              <input class="e-field e-multiselect" name="JuryMembers" />
+              <input type="hidden" class="e-field" name="JuryMemberIds" />
+              <input type="hidden" class="e-field" name="Description" />
+            `;
+            container.appendChild(juryMembersField);
+            // Initialize MultiSelect for Jury Members field
+            console.log(supervisors);
+            console.log(
+              supervisors.map(
+                (supervisor) => `${supervisor.firstName} ${supervisor.lastName}`
+              )
+            );
+            console.log(args.data.JuryMembers);
+            const multiSelectInstance = new MultiSelect({
+              cssClass: mode === "dark" ? "custom-dropdown" : "",
+              dataSource: supervisors.map(
+                (supervisor) => `${supervisor.firstName} ${supervisor.lastName}`
+              ), // Replace with your data
+              placeholder: "Select Jury Members",
+              value: Array.isArray(args.data.JuryMembers)
+                ? args.data.JuryMembers.map((member) =>
+                    typeof member === "string"
+                      ? member
+                      : `${member.firstName} ${member.lastName}`
+                  )
+                : [], // Set initial value as an array
+              change: (e) => {
+                if (e.value) {
+                  // Check if e.value is not null
+                  args.data.JuryMembers = e.value.join(",");
+                  const selectedSupervisors = supervisors.filter((supervisor) =>
+                    e.value.includes(`${supervisor.firstName} ${supervisor.lastName}`)
+                  );
+                  const selectedIds = selectedSupervisors.map(
+                    (supervisor) => supervisor.id
+                  );
+                  juryMembersField.querySelector('input[name="JuryMemberIds"]').value =
+                    selectedIds.join(",");
+                  juryMembersField.querySelector(
+                    'input[name="Description"]'
+                  ).value = `Jury Members: ${e.value.join(", ")}`;
+                  args.data.JuryMemberIds = selectedIds.join(",");
+                  args.data.Description = `Jury Members: ${e.value.join(", ")}`;
+                } else {
+                  args.data.JuryMembers = "";
+                  juryMembersField.querySelector('input[name="JuryMemberIds"]').value = "";
+                  args.data.JuryMemberIds = "";
+                  args.data.Description = "";
+                }
+              },
+            }).appendTo(juryMembersField.querySelector("input.e-multiselect"));
+
+          }
         }
-      );
-      if (!response.ok) {
-        throw new Error("Failed to update event");
       }
-    } catch (error) {
-      console.error("Error updating event:", error);
+      if (args.type === "DeleteAlert") {
+        mode === "dark"
+          ? args.element.classList.add("custom-delete-popup")
+          : args.element.classList.remove("custom-delete-popup");
+      }
+    };
+
+console.log(presentationsPlan);
+  if (loading) {
+    return <DefenseSkeleton />;
+  }
+
+  if (presentationsPlan && Object.keys(presentationsPlan).length > 0) {
+    if (presentationsPlan.completed) {      
+        return (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "20px",
+            }}
+            className={mode === "dark" ? "schedule-component" : ""}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <BreadCrumb
+                items={[
+                  { label: "Home", path: "/" },
+                  { label: "dashboard", path: "" },
+                  { label: "Defense", path: "" },
+                ]}
+              />
+              
+            </div>
+            <ScheduleComponent
+              eventSettings={{
+                dataSource: events,
+              }}
+              allowDragAndDrop={true}
+              height="calc(100vh - 140px)"
+              style={{ borderRadius: "5px" }}
+              readonly={isStudent ? true : false}
+              dragStop={(args) => {
+                console.log("dragStop", args);
+                const data = args.data;
+                handleDragStop(data);
+              }}
+              actionComplete={(args) => {
+                console.log(args);
+                if (args.requestType === "eventCreated") {
+                  handleCreatePresentation(args.data);
+                }
+                if (args.requestType === "eventRemoved") {
+                  handleDeletePresentation(args.data);
+                }
+                if (args.requestType === "eventChanged") {
+                  handleEditPresentation(args.data);
+                }
+              }}
+              cellClick={(args) => {
+                args.cancel = true;
+              }}
+              popupOpen={onPopupOpen}
+              // popupClose={onPopupClose}
+              // editorTemplate={editorTemplate}
+            >
+              <Inject services={[Day, Week, WorkWeek, Month, DragAndDrop]} />
+            </ScheduleComponent>
+          </div>
+        );
+    }else{
+      if (isStudent) {
+        return (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "20px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <BreadCrumb
+                items={[
+                  { label: "Home", path: "/" },
+                  { label: "dashboard", path: "" },
+                  { label: "Defense", path: "" },
+                ]}
+              />
+            </div>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                paddingTop: "100px",
+                alignItems: "center",
+              }}
+            >
+              <img src="/src/assets/scheduler.png" height={200} width={200} />
+              <Typography variant="h5" color="textSecondary" textAlign="center">
+                No presentations to show
+              </Typography>
+              <Typography
+                variant="body2"
+                color="textSecondary"
+                textAlign="center"
+              >
+                Ooops! please wait until the head of branch validate the
+                presentations
+              </Typography>
+            </div>
+          </div>
+        );
+      }else{
+        return (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "20px",
+            }}
+            className={mode === "dark" ? "schedule-component" : ""}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <BreadCrumb
+                items={[
+                  { label: "Home", path: "/" },
+                  { label: "dashboard", path: "" },
+                  { label: "Defense", path: "" },
+                ]}
+              />
+              {isHOB && presentationsPlan &&
+              Object.keys(presentationsPlan).length > 0 &&
+              presentationsPlan.completed ? (
+                <></>
+              ) : (
+                <Button onClick={() => setConfirmationOpenDialog(true)}>
+                  validate plan
+                </Button>
+              )}
+            </div>
+            <ScheduleComponent
+              eventSettings={{
+                dataSource: events,
+              }}
+              allowDragAndDrop={true}
+              height="calc(100vh - 140px)"
+              style={{ borderRadius: "5px" }}
+              readonly={isStudent ? true : false}
+              dragStop={(args) => {
+                console.log("dragStop", args);
+                const data = args.data;
+                handleDragStop(data);
+              }}
+              actionComplete={(args) => {
+                console.log(args);
+                if (args.requestType === "eventCreated") {
+                  handleCreatePresentation(args.data);
+                }
+                if (args.requestType === "eventRemoved") {
+                  handleDeletePresentation(args.data);
+                }
+                if (args.requestType === "eventChanged") {
+                  handleEditPresentation(args.data);
+                }
+              }}
+              cellClick={(args) => {
+                args.cancel = true;
+              }}
+              popupOpen={onPopupOpen}
+              // popupClose={onPopupClose}
+              // editorTemplate={editorTemplate}
+            >
+              <Inject services={[Day, Week, WorkWeek, Month, DragAndDrop]} />
+            </ScheduleComponent>
+            <ConfirmationDialog
+              message={"Are you sure you want to validate presentations plan?"}
+              openDialog={confirmationOpenDialog}
+              setOpenDialog={setConfirmationOpenDialog}
+              handleConfirmClick={() => validatePresentationsPlan(token)}
+              setLoading={setConfirmLoading}
+              loading={confirmLoading}
+            />
+          </div>
+        );
+      }
     }
-  };
-
-  const capitalizeFirstLetter = (event) => {
-    const capitalizedEvent = {};
-    for (const key in event) {
-      if (Object.hasOwnProperty.call(event, key)) {
-        const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
-        capitalizedEvent[capitalizedKey] = event[key];
-      }
-    }
-    return capitalizedEvent;
-  };
-
-
-
-const onPopupOpen = (args) => {
-  if (args.type === "Editor") {
-    const container = args.element.querySelector(".e-schedule-form");
-    if (container) {
-      // Remove unwanted elements if they exist
-      const repeatRow = container.querySelector(
-        ".e-float-input.e-control-wrapper.e-input-group.e-ddl.e-lib.e-keyboard.e-valid-input"
+  }else{
+    if (isStudent || isSupervisor) {
+      return (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "20px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <BreadCrumb
+              items={[
+                { label: "Home", path: "/" },
+                { label: "dashboard", path: "" },
+                { label: "Defense", path: "" },
+              ]}
+            />
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              paddingTop: "100px",
+              alignItems: "center",
+            }}
+          >
+            <img src="/src/assets/scheduler.png" height={200} width={200} />
+            <Typography variant="h5" color="textSecondary" textAlign="center">
+              No presentations to show
+            </Typography>
+            <Typography
+              variant="body2"
+              color="textSecondary"
+              textAlign="center"
+            >
+              Ooops! please wait until the head of branch validate the
+              presentations
+            </Typography>
+          </div>
+        </div>
       );
-      repeatRow && repeatRow.remove();
-      const checkboxesRow = container.querySelector(".e-all-day-time-zone-row");
-      checkboxesRow && (checkboxesRow.style.display = "none");
-      const descriptionRow = container.querySelector(".e-description-row");
-      descriptionRow && descriptionRow.remove();
-      const titleRow = container.querySelector(".e-subject-container");
-      titleRow && titleRow.remove();
-
-      // Add custom fields for Team and Jury Members
-      let teamField = container.querySelector(
-        ".custom-team-field .e-dropdownlist"
+    }else if(isHOB){
+      return (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "20px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <BreadCrumb
+              items={[
+                { label: "Home", path: "/" },
+                { label: "dashboard", path: "" },
+                { label: "Defense", path: "" },
+              ]}
+            />
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              paddingTop: "100px",
+              alignItems: "center",
+            }}
+          >
+            <img src="/src/assets/scheduler.png" height={200} width={200} />
+            <Typography variant="h5" color="textSecondary" textAlign="center">
+              No presentations to show
+            </Typography>
+            <Typography
+              variant="body2"
+              color="textSecondary"
+              textAlign="center"
+            >
+              There is still no presentations plan for this year, go ahead and{" "}
+              <span
+                onClick={() => addPresentationsPlan(token,setRender,initialRender)}
+                style={{ color: "#1976d2", fontWeight: "bold",cursor:"pointer" }}
+              >
+                create
+              </span>{" "}
+              one.
+            </Typography>
+          </div>
+        </div>
       );
-      if (!teamField) {
-        teamField = document.createElement("div");
-        teamField.className = "custom-team-field";
-        teamField.innerHTML = `
-          <label class="e-label">Team</label>
-          <input class="e-field e-dropdownlist" name="Team" />
-        `;
-        container.appendChild(teamField);
-        // Initialize DropDownList for Team field
-        new DropDownList({
-          dataSource: ["Option 1", "Option 2", "Option 3"], // Replace with your data
-          placeholder: "Select Team",
-          value: args.data.Team, // Set initial value
-          change: (e) => {
-            args.data.Team = e.value;
-          },
-        }).appendTo(teamField.querySelector("input"));
-      }
-
-      let juryMembersField = container.querySelector(
-        ".custom-jury-field .e-multiselect"
-      );
-      if (!juryMembersField) {
-        juryMembersField = document.createElement("div");
-        juryMembersField.className = "custom-jury-field";
-        juryMembersField.innerHTML = `
-          <label class="e-label">Jury Members</label>
-          <input class="e-field e-multiselect" name="JuryMembers" />
-        `;
-        container.appendChild(juryMembersField);
-        // Initialize MultiSelect for Jury Members field
-        new MultiSelect({
-          dataSource: ["Option A", "Option B", "Option C"], // Replace with your data
-          placeholder: "Select Jury Members",
-          value: args.data.JuryMembers ? args.data.JuryMembers.split(",") : [], // Set initial value as an array
-          change: (e) => {
-            args.data.JuryMembers = e.value.join(",");
-          },
-        }).appendTo(juryMembersField.querySelector("input"));
-      }
     }
   }
-};
-
-
-
-  return (
-    <div className="defense">
-      <ScheduleComponent
-        eventSettings={{
-          dataSource: events,
-        }}
-        allowDragAndDrop={true}
-        height="calc(100vh - 100px)"
-        // readonly={true}
-        dragStop={(args) => {
-          console.log("dragStop", args);
-          const data = args.data;
-          handleDragStop(data);
-        }}
-        actionComplete={(args) => {
-          if (args.requestType === "eventCreated") {
-            console.log("Event submitted:", args);
-          }
-        }}
-        cellClick={(args) => {
-          args.cancel = true;
-        }}
-        popupOpen={onPopupOpen}
-      >
-        
-        <Inject services={[Day, Week, WorkWeek, Month, Agenda, DragAndDrop]} />
-      </ScheduleComponent>
-    </div>
-  );
 }
 
 export default Defense;

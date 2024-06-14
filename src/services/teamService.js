@@ -17,6 +17,7 @@ export const getAllTeams = async (token,academicYear) => {
             console.error("Error fetching data:", error);
             throw error;
         });
+        console.log(allTeams);
     const teams = allTeams.filter(
       (team) => team.responsible.studiedBranchId === parseInt(selectedBranchId)
     );
