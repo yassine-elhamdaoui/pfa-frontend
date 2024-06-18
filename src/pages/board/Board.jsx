@@ -40,8 +40,8 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import ArticleIcon from "@mui/icons-material/Article";
 import { getUserStories } from "../../services/backlog";
 import { Link, useSearchParams } from "react-router-dom";
-import { getUserById } from "../../services/userService";
-import { set } from "lodash";
+import { downLoadProfileImage, getUserById } from "../../services/userService";
+import { forEach, set } from "lodash";
 
 function Board() {
   const mode = localStorage.getItem("mode");
@@ -59,6 +59,7 @@ function Board() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [membersImages , setMembersImages] = useState([]);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const handleSnackbarClose = () => {
@@ -86,11 +87,16 @@ function Board() {
           );
           setUserStories(fetchedUserStories);
         }else{
-          console.log("fuck");
           teamId = fetchedUser.teamId;
           if (teamId !== null) {
             console.log(teamId );
             const fetchedTeam = await getTeamById(teamId , token);
+            console.log(fetchedTeam);
+            forEach(fetchedTeam.members, async (member) => {
+              const url = await downLoadProfileImage(member.id, token);
+              console.log(member.firstName);
+              setMembersImages((prev) => [...prev, {id:member.id,name:member.firstName+" "+member.lastName , url:url}]);
+              });
             setTeam(fetchedTeam);
             setProject(fetchedTeam.project);
             console.log(fetchedTeam.project);
@@ -98,6 +104,7 @@ function Board() {
               fetchedTeam.project.backlogId,
               token
             );
+            console.log(userStories);
             setUserStories(fetchedUserStories);
             setLoading(false);
           } else {
@@ -127,8 +134,8 @@ function Board() {
     console.log(`Updating story ${storyId} to status ${newStatus}`);
   };
 
-  const swimlaneTemplate = (data) => {
-    console.log(data.textField);
+  const swimlaneTemplate =  (data) => {
+
     if (data && data.keyField !== "") {
       console.log(data);
       return (
@@ -140,8 +147,23 @@ function Board() {
             padding: "5px",
           }}
         >
-          <Avatar {...stringAvatar(data.keyField, 30, 15)} />
-          <span>{data.keyField}</span>
+          {/* <Avatar {...stringAvatar(data.keyField, 30, 15)} /> */}
+          <Avatar
+            src={
+              membersImages.find(
+                (member) => member.id === parseInt(data.keyField)
+              )?.url
+            }
+            sx={{ width: 30, height: 30 }}
+          />
+
+          <span>
+            {
+              membersImages.find(
+                (member) => member.id === parseInt(data.keyField)
+              )?.name
+            }
+          </span>
           <Typography variant="body3" color="textSecondary">
             {data.count} items
           </Typography>
@@ -240,7 +262,7 @@ function Board() {
                   }}
                   swimlaneSettings={{
                     template: swimlaneTemplate,
-                    keyField: `developerName`,
+                    keyField: `developerId`,
                     showItemCount: false,
                   }}
                   enableTooltip={openDialog ? false : true}

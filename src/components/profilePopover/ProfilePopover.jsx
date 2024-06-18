@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { useState, useEffect } from "react";
 import {
   Popover,
@@ -9,97 +10,40 @@ import {
   Button,
   TextField,
 } from "@mui/material";
-import { PhotoCamera, Close, Edit } from "@mui/icons-material";
-import { getUserById } from "../../services/userService";
+import LogoutIcon from "@mui/icons-material/Logout";
+import { PhotoCamera, Close, Edit, Download } from "@mui/icons-material";
+import { downLoadProfileImage, getUserById } from "../../services/userService";
 import { uploadProfileImage } from "../../services/imageService";
 import { updateUserById } from "../../services/userService";
+import BorderColorOutlinedIcon from "@mui/icons-material/BorderColorOutlined";
+import EditProfileDialog from "../dialogs/EditProfileDialog";
+const ProfilePopover = ({ anchorEl, open, onClose,userData, profileImage ,setProfileImage}) => {
 
-const ProfilePopover = ({ anchorEl, open, onClose }) => {
-  const [userData, setUserData] = useState(null);
-  const [profileImage, setProfileImage] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [inscriptionNumber, setInscriptionNumber] = useState("");
-  const [popoverWidth, setPopoverWidth] = useState("auto");
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const userId = localStorage.getItem("userId");
-        const user = await getUserById(userId, token);
-        setUserData(user);
-        if (user.profileImage) {
-          const profileImageUrl = `http://localhost:8080${user.profileImage}`;
-          setProfileImage(profileImageUrl);
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
+  const mode = localStorage.getItem("mode");
+    const token = localStorage.getItem("token");
+    const [openEditDialog, setOpenEditDialog] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState("");
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const handleSnackbarClose = () => {
+      setSnackbarOpen(false);
     };
 
-    fetchUserData();
-  }, []);
-
+    const [isAvatarHovered, setIsAvatarHovered] = useState(false);
   const handleImageChange = async (e) => {
     if (e.target.files && e.target.files[0]) {
-      const token = localStorage.getItem("token");
       try {
         const updatedUser = await uploadProfileImage(
           userData.id,
           e.target.files[0],
           token
         );
-        const profileImageUrl = `http://localhost:8080${updatedUser.profileImage}`;
-        setProfileImage(profileImageUrl);
+              const url = await downLoadProfileImage(userData.id, token);
+              setProfileImage(url);
       } catch (error) {
         console.error("Error uploading image", error);
       }
     }
   };
-
-  const handleEditClick = () => {
-    setFirstName(userData.firstName);
-    setLastName(userData.lastName);
-    setEmail(userData.email);
-    setPassword("");
-    setNewPassword("");
-    setInscriptionNumber(userData.inscriptionNumber || "");
-    setIsEditing(true);
-    setPopoverWidth("80%");
-  };
-
-  const handleSubmit = async () => {
-    const token = localStorage.getItem("token");
-    const updatedUserData = {
-      firstName,
-      lastName,
-      email,
-      password,
-      inscriptionNumber,
-    };
-
-    try {
-      const id = localStorage.getItem("userId");
-      const updatedUser = await updateUserById(id, updatedUserData, token);
-
-      setUserData(updatedUser);
-
-      if (updatedUser.token) {
-        localStorage.setItem("token", updatedUser.token);
-      }
-
-      setIsEditing(false);
-      setPopoverWidth("auto");
-    } catch (error) {
-      console.error("Error updating user:", error);
-    }
-  };
-
   return (
     <Popover
       open={open}
@@ -107,146 +51,150 @@ const ProfilePopover = ({ anchorEl, open, onClose }) => {
       onClose={onClose}
       anchorOrigin={{
         vertical: "bottom",
-        horizontal: "center",
+        horizontal: "right",
       }}
       transformOrigin={{
         vertical: "top",
-        horizontal: "center",
+        horizontal: "right",
       }}
-      PaperProps={{
-        sx: {
-          width: popoverWidth,
-          maxWidth: 600,
-          p: 4,
+      sx={{
+        "& .MuiPopover-paper": {
+          borderRadius: "15px",
+          width: window.innerWidth > 550 ? "280px" : "100svw",
+          minHeight: "fit-content",
+          maxHeight: "100vh",
+          backgroundColor: mode === "dark" ? "#121212" : "#f5f5f5",
+          position: "relative",
+          "&::-webkit-scrollbar": {
+            display: "none",
+          },
         },
       }}
     >
-      <Box sx={{ bgcolor: "background.paper", borderRadius: 2 }}>
+      <Box sx={{ borderRadius: 2 }}>
         <Box display="flex" justifyContent="flex-end">
           <IconButton onClick={onClose}>
             <Close />
           </IconButton>
         </Box>
-        <Box display="flex" alignItems="center" justifyContent="center" mb={2}>
-          <Avatar
-            src={profileImage}
-            alt="Profile"
-            sx={{ width: 150, height: 150 }}
-          />
-          <input
-            accept="image/*"
-            style={{ display: "none" }}
-            id="icon-button-file"
-            type="file"
-            onChange={handleImageChange}
-          />
-          <label htmlFor="icon-button-file">
-            <IconButton
-              color="primary"
-              aria-label="upload picture"
-              component="span"
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          gap="10px"
+          p="0 10px 10px 10px"
+        >
+          <div
+            style={{
+              position: "relative",
+            }}
+            onMouseEnter={() => setIsAvatarHovered(true)}
+            onMouseLeave={() => setIsAvatarHovered(false)}
+          >
+            <Avatar alt="Profile" sx={{ width: 65, height: 65 }} 
+            src= {profileImage !== "" && profileImage}
+            />
+            <label>
+              <input
+                accept="image/*"
+                style={{ display: "none" }}
+                id="icon-button-file"
+                type="file"
+                onChange={handleImageChange}
+              />
+              <IconButton
+                sx={{
+                  position: "absolute",
+                  bottom: "-10px",
+                  right: "-5px",
+                  color: "lightgray",
+                  display: isAvatarHovered ? "block" : "none",
+                }}
+                aria-label="upload picture"
+                component="span" // Use component="span" to make the IconButton clickable
+                disableRipple
+              >
+                <PhotoCamera />
+              </IconButton>
+            </label>
+          </div>
+          {userData && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
             >
-              <PhotoCamera />
-            </IconButton>
-          </label>
-        </Box>
-        {userData && (
-          <>
-            <Typography variant="h4" align="center" gutterBottom>
-              {userData.firstName} {userData.lastName}
-            </Typography>
-            <Typography variant="body1" align="center" gutterBottom>
-              {userData.email}
-            </Typography>
-            {userData.authorities.some(
-              (authority) => authority.authority === "ROLE_STUDENT"
-            ) && (
-              <Typography variant="body1" align="center" gutterBottom>
-                Inscription Number {userData.inscriptionNumber}
+              <Typography fontSize={17}>
+                {userData.firstName} {userData.lastName}
               </Typography>
-            )}
-            <Divider sx={{ my: 2 }} />
-            <Box display="flex" justifyContent="center">
-              {!isEditing ? (
-                <Button
-                  variant="outlined"
-                  startIcon={<Edit />}
-                  onClick={handleEditClick}
-                >
-                  Edit
-                </Button>
-              ) : (
-                <Box sx={{ width: "100%" }}>
-                  <TextField
-                    label="Firstname"
-                    variant="outlined"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                  />
-                  <TextField
-                    label="Lastname"
-                    variant="outlined"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                  />
-                  <TextField
-                    label="Email"
-                    variant="outlined"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                  />
-                  <TextField
-                    label="Password"
-                    type="password"
-                    variant="outlined"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                  />
-                  <TextField
-                    label="New Password"
-                    type="password"
-                    variant="outlined"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                  />
-                  {userData.authorities.some(
-                    (authority) => authority.authority === "ROLE_STUDENT"
-                  ) && (
-                    <TextField
-                      label="Numéro d'inscription"
-                      variant="outlined"
-                      value={inscriptionNumber}
-                      onChange={(e) => setInscriptionNumber(e.target.value)}
-                      fullWidth
-                      sx={{ mb: 2 }}
-                    />
-                  )}
-                  <Box
-                    display="flex"
-                    justifyContent="flex-end"
-                    mt={2}
-                    sx={{ width: "100%" }}
-                  >
-                    <Button variant="outlined" onClick={handleSubmit}>
-                      Submit
-                    </Button>
-                  </Box>
-                </Box>
-              )}
+              <Typography color="textSecondary" fontSize={13}>
+                {userData.email}
+              </Typography>
+            </div>
+          )}
+          <Divider sx={{ width: "100%" }} />
+
+          {userData && (
+            <Box
+              sx={{
+                width: "100%",
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  gap: "8px",
+                  alignItems: "start",
+                  width: "100%",
+                  cursor: "pointer",
+                }}
+                onClick={() => setOpenEditDialog(true)}
+              >
+                <BorderColorOutlinedIcon
+                  sx={{
+                    color:
+                      mode === "dark"
+                        ? "rgba(255,255,255,0,85)"
+                        : "rgba(0,0,0,0,85)",
+                  }}
+                />
+                <Typography color="textSecondary">Edit Profile</Typography>
+              </div>
+              {/* <Divider sx={{ width: "100%" }} /> */}
+              <div
+                style={{
+                  display: "flex",
+                  gap: "8px",
+                  width: "100%",
+                  cursor: "pointer",
+                }}
+              >
+                <LogoutIcon
+                  sx={{
+                    color:
+                      mode === "dark"
+                        ? "rgba(255,255,255,0,85)"
+                        : "rgba(0,0,0,0,85)",
+                  }}
+                />
+                <Typography color="textSecondary">Logout</Typography>
+              </div>
             </Box>
-          </>
-        )}
+          )}
+        </Box>
       </Box>
+      <EditProfileDialog
+        openEditDialog={openEditDialog}
+        handleEditClose={() => setOpenEditDialog(false)}
+        setSnackbarOpen={setSnackbarOpen}
+        setSnackbarMessage={setSnackbarMessage}
+        userData={userData}
+      />
     </Popover>
   );
 };
