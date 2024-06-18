@@ -33,6 +33,9 @@ import CreateProjectDialog from "../dialogs/CreateProjectDialog";
 import CreateTeamDialog from "../dialogs/CreateTeamDialog";
 import Notifications from "../notification/Notifications";
 import { Search, SearchIconWrapper, StyledInputBase } from "./navBar";
+import ProfilePopover from "../profilePopover/ProfilePopover"; 
+import { downLoadProfileImage, getUserById } from "../../services/userService";
+
 
 // eslint-disable-next-line react/prop-types
 export default function NavBar({ handleDrawerOpen, setMode }) {
@@ -41,13 +44,17 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
   const [notifications, setNotifications] = useState([]);
   const [teamNotifications , setTeamNotifications] = useState([]);
   const [projectNotifications , setProjectNotifications] = useState([]);
+  const [userData, setUserData] = useState({});
   const [elapsedTime, setElapsedTime] = useState({});
   const [teamDialogOpen, setTeamDialogOpen] = useState(false);
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [anchorEl2, setAnchorEl2] = useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
+  const [profilePopoverOpen, setProfilePopoverOpen] = useState(false);//////usestate pour item profile
+  const [profileAnchorEl, setProfileAnchorEl] = useState(null); ////////////anchore1 pour profil
 
+  const [profileImage, setProfileImage] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const handleSnackbarClose = () => {
@@ -64,10 +71,15 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
       try {
         const token = localStorage.getItem("token");
         const notifications = await getAllNotificationsForCurrentUser(token);
+        const user = await getUserById(localStorage.getItem("userId"), token);
+        setUserData(user);
         // Trier les notifications par date de création
         notifications.sort(
           (a, b) => new Date(b.creationDate) - new Date(a.creationDate)
         );
+        const url = await downLoadProfileImage(user.id, token);
+        setProfileImage(url);
+
         setNotifications(notifications);
         setTeamNotifications(notifications.filter((notification) => notification.type === "TEAM"));
         setProjectNotifications(notifications.filter((notification) => notification.type === "PROJECT"));
@@ -86,7 +98,6 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
         setSnackbarOpen(true);
       }
     };
-
     fetchNotifications();
 
     // Set up polling to fetch notifications every 1 minute
@@ -156,6 +167,19 @@ const handleDeleteNotification = async (notificationId, notificationType) => {
   const isStudent = hasRole("ROLE_STUDENT");
   const isHOB = hasRole("ROLE_HEAD_OF_BRANCH");
 
+
+  const handleProfileClick = (event) => {
+    setProfileAnchorEl(event.currentTarget);
+    setProfilePopoverOpen(true);
+    handleMenuClose(); 
+  };
+  
+  const handleProfilePopoverClose = () => {
+    setProfilePopoverOpen(false);
+    setProfileAnchorEl(null);
+  
+  };
+
   const handleAddTeamButtonClicked = () => {
     setTeamDialogOpen(true);
   };
@@ -219,7 +243,7 @@ const handleDeleteNotification = async (notificationId, notificationType) => {
       open={isMenuOpen}
       onClose={handleMenuClose}
     >
-      <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
+      <MenuItem onClick={handleProfileClick}>Profile</MenuItem>
       <MenuItem onClick={handleMenuClose}>My account</MenuItem>
       {window.screen.width >= 900 ? (
         <MenuItem onClick={(event) => setAnchorEl2(event.currentTarget)}>
@@ -464,7 +488,12 @@ const handleDeleteNotification = async (notificationId, notificationType) => {
               color="inherit"
             >
               {localStorage.getItem("name") ? (
-                <Avatar {...stringAvatar(localStorage.getItem("name"))} />
+                // <Avatar {...stringAvatar(localStorage.getItem("name"))} />
+                <Avatar
+                  alt="Profile"
+                  src={profileImage !== "" && profileImage}
+                  sx={{ width: 35, height: 35 }}
+                />
               ) : (
                 <AccountCircle />
               )}
@@ -484,6 +513,16 @@ const handleDeleteNotification = async (notificationId, notificationType) => {
           </Box>
         </Toolbar>
       </Box>
+
+      {profilePopoverOpen && <ProfilePopover
+        anchorEl={profileAnchorEl}
+        open={profilePopoverOpen}
+        userData={userData}
+        onClose={handleProfilePopoverClose}
+        profileImage={profileImage}
+        setProfileImage={setProfileImage}
+      />}
+
       {renderMobileMenu}
       {renderMenu}
       {renderModeMenu}
@@ -493,6 +532,7 @@ const handleDeleteNotification = async (notificationId, notificationType) => {
           handleModalClose={handleModalClose}
           setSnackbarOpen={setSnackbarOpen}
           setSnackbarMessage={setSnackbarMessage}
+        
         />
       )}
       {isStudent && (

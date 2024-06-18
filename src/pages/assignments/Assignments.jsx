@@ -48,14 +48,14 @@ function Assignments({ mode }) {
   useEffect(() => {
     const fetchTeamsAndPreferences = async () => {
       try {
-                let academicYear;
-                const year = new Date().getFullYear();
-                const month = new Date().getMonth();
-                if (month >= 9 && month <= 12) {
-                  academicYear = `${year}/${year + 1}`;
-                } else if (month >= 1 && month <= 7) {
-                  academicYear = `${year - 1}/${year}`;
-                }
+        let academicYear;
+        const year = new Date().getFullYear();
+        const month = new Date().getMonth();
+        if (month >= 9 && month <= 12) {
+          academicYear = `${year}/${year + 1}`;
+        } else if (month >= 1 && month <= 7) {
+          academicYear = `${year - 1}/${year}`;
+        }
         const fetchedTeams = await getAllTeams(token, academicYear);
         const fetchedPreferences = await getAllPreferences(token);
         const fetchedAssignment = await getAssignment(token);

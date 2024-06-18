@@ -49,4 +49,59 @@ const getSupervisors = async (token) => {
     });
   return supervisors;
 };
-export { getUsers , getUserById, getSupervisors};
+const downLoadProfileImage = async (userId, token) => {
+  try {
+    const response = await fetch(
+      `http://localhost:8080/api/users/${userId}/downloadProfileImage`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (!response.ok) {
+      throw new Error("Failed to download image");
+    }
+    const image = await response.blob();
+     const url = window.URL.createObjectURL(image);
+     console.log(url);
+    return url;
+  } catch (error) {
+    console.error("Error downloading image:", error);
+    throw error;
+  }
+}
+const updateUserById = async (
+  token,
+  userId,
+  data,
+  setSnackBarOpen,
+  setSnackbarMessage
+) => {
+  try {
+    const response = await fetch(`http://localhost:8080/api/users/${userId}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      setSnackBarOpen(true);
+      setSnackbarMessage("Failed to update user");
+      throw new Error("Failed to update user");
+    }
+    const updatedUser = await response.json();
+    setSnackBarOpen(true);
+    setSnackbarMessage("User updated successfully");
+    return updatedUser;
+  } catch (error) {
+    setSnackBarOpen(true);
+    setSnackbarMessage("Failed to update user");
+    console.error("Error updating user:", error);
+    throw error;
+  }
+};
+export { getUsers , getUserById, updateUserById,getSupervisors, downLoadProfileImage};
