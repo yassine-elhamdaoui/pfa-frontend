@@ -61,8 +61,8 @@ export { createTeam };
 
 
 export const getTeamById = async (teamId, token) => {
-    try {
-      const response = await fetch(`http://localhost:8080/api/teams/${teamId}`, {
+  try {
+      const response = await fetch(`http://localhost:8081/api/teams/${teamId}`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,

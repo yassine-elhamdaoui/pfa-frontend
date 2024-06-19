@@ -188,7 +188,7 @@ export const rejectProject = async (token, projectId) => {
 
 export const getProjectById = async (projectId, token) => {
   try {
-    const response = await fetch(`http://localhost:8080/api/projects/${projectId}`, {
+    const response = await fetch(`http://localhost:8081/api/projects/${projectId}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,

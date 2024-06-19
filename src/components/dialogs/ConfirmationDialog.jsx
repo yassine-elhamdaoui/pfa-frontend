@@ -10,6 +10,7 @@ import { LoadingButton } from "@mui/lab";
 
 
 export default function ConfirmationDialog({
+  id,
   message,
   openDialog,
   setOpenDialog,
@@ -17,12 +18,18 @@ export default function ConfirmationDialog({
   setLoading,
   loading,
 }) {
+ 
   const onConfirmDialogClose = () => {
     setOpenDialog(false);
   };
-  const onConfirmDialogConfirm = () => {
+  const onConfirmDialogConfirm = (id) => {
     setLoading(true);
+    if (id==null) {
     handleConfirmClick();
+    } else {
+      handleConfirmClick(id)
+    }
+   
     setOpenDialog(false);
   };
 
@@ -45,7 +52,7 @@ export default function ConfirmationDialog({
           sx={{marginLeft:"15px" , marginRight:"15px"}}
           loadingIndicator="Loading..."
           variant="contained"
-          onClick={onConfirmDialogConfirm}
+          onClick={()=>onConfirmDialogConfirm(id)}
           autoFocus
         >
           <span>Confirm</span>

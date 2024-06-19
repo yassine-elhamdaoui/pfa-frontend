@@ -20,7 +20,7 @@ export { getUsers };
 
 export const getSupervisorById = async (supervisorId, token) => {
   try {
-    const response = await fetch(`http://localhost:8080/api/users/${supervisorId}`, {
+    const response = await fetch(`http://localhost:8081/api/users/${supervisorId}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,

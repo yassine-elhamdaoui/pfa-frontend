@@ -2,7 +2,7 @@ export const downloadFile = async (projectId, docId, docName, token) => {
   try {
     // Fetch the file content from the endpoint
     const response = await fetch(
-      "http://localhost:8080/api/projects/${projectId}/docs/${docId}/download",
+      "http://localhost:8081/api/projects/${projectId}/docs/${docId}/download",
       {
         method: "GET",
         headers: {
