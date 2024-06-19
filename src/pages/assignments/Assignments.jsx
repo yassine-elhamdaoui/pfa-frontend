@@ -19,6 +19,7 @@ import { hasRole } from "../../utils/userUtiles";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import ConfirmationDialog from "../../components/dialogs/ConfirmationDialog";
 import { stringAvatar } from "../../utils/generalUtils";
+import BreadCrumb from "../../components/breadCrumb/BreadCrumb";
 
 
 const token = localStorage.getItem("token");
@@ -47,7 +48,15 @@ function Assignments({ mode }) {
   useEffect(() => {
     const fetchTeamsAndPreferences = async () => {
       try {
-        const fetchedTeams = await getAllTeams(token);
+                let academicYear;
+                const year = new Date().getFullYear();
+                const month = new Date().getMonth();
+                if (month >= 9 && month <= 12) {
+                  academicYear = `${year}/${year + 1}`;
+                } else if (month >= 1 && month <= 7) {
+                  academicYear = `${year - 1}/${year}`;
+                }
+        const fetchedTeams = await getAllTeams(token, academicYear);
         const fetchedPreferences = await getAllPreferences(token);
         const fetchedAssignment = await getAssignment(token);
         setTeams(fetchedTeams);
@@ -97,7 +106,7 @@ function Assignments({ mode }) {
 
   const handleViewPreferences = (teamId) => {
     console.log(teamId);
-    navigate(`/project/team/${teamId}/preferences`);
+    navigate(`/dashboard/project/team/${teamId}/preferences`);
   };
 
   const columns = [
@@ -142,7 +151,7 @@ function Assignments({ mode }) {
       headerClassName: "custom-header",
       width: 200,
       renderCell: (params) => (
-        <AvatarGroup max={3}>
+        <AvatarGroup max={5}>
           {params.row.members.map((member) => (
             <Avatar
               key={member.id}
@@ -215,7 +224,10 @@ function Assignments({ mode }) {
             justifyContent: "space-between",
           }}
         >
-          <h2>Assignments</h2>
+          <BreadCrumb items={[
+              { label: "Home", href: "/" },
+              { label: "Assignments", href: "/assignments" }
+            ]} />
               {teamsWithoutPreferences.length === 0 &&
               Object.keys(assignment).length === 0 ? (
                 <Button
@@ -229,7 +241,7 @@ function Assignments({ mode }) {
               {Object.keys(assignment).length !== 0 ? (
                 <Button
                   variant="outlined"
-                  onClick={() => navigate("/assignments/result")}
+                  onClick={() => navigate("/dashboard/assignments/result")}
                 >
                   View assignment
                 </Button>
@@ -270,11 +282,17 @@ function Assignments({ mode }) {
         />
       </div>
     ) : (
+      <>
+        <BreadCrumb items={[
+              { label: "Home", href: "/" },
+              { label: "Assignments", href: "/assignments" }
+            ]} />
       <PlaceHolder
         icon={ErrorOutlineIcon}
         title="No Teams Found"
         message="There are no teams to assign to"
       />
+      </>
     )
   ) : (
     <PlaceHolder

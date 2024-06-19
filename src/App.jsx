@@ -25,55 +25,67 @@ import Preferences from "./pages/preferences/Preferences";
 import TeamLayout from "./layouts/TeamLayout";
 import Defense from "./pages/defense/Defense";
 import AssignmentsResult from "./pages/assignmentsResult/AssignmentsResult";
+import ProjectsLayout from "./layouts/ProjectsLayout";
+import BoardForSupervisor from "./pages/board/BoardForSupervisor";
+import TeamForSupervisor from "./pages/team/TeamForSupervisor";
+import GeneralLayout from "./layouts/GeneralLayout";
+import Docs from "./pages/docs/Docs";
 
 
 function App() {
   const [mode , setMode] = useState(localStorage.getItem("mode") || "light");
-  const theme = createTheme({
-    palette: {
-      mode: mode,
-    },
-  });
+
+const theme = createTheme({
+  palette: {
+    mode: mode,
+  },
+});
   return (
     <ThemeProvider theme={theme}>
       <BrowserRouter>
         <Routes>
           <Route path="/auth/authenticate" element={<Authenticate />} />
           <Route path="/auth/register" element={<Register />} />
-          <Route
-            path="/"
-            element={<MainLayout mode={mode} setMode={setMode} />}
-          >
-            <Route index element={<Home />} />
-            <Route path="project" element={<ProjectLayout />}>
-              <Route index element={<DashBoard />} />
-              <Route path="backlog" element={<BackLog />} />
-              <Route path="board" element={<Board />} />
-              <Route path="reports" element={<Reports />} />
-              <Route path="settings" element={<Settings />} />
-              <Route path="team/:id" element={<TeamLayout />}>
-                <Route index element={<Team />} />
-                <Route path="preferences" element={<Preferences />} />
+            <Route
+              path="/"
+              element={<GeneralLayout />}
+            >
+              <Route index element={<Home />} />
+              <Route path="/dashboard" element={<MainLayout mode={mode} setMode={setMode}/>} >
+                <Route path="project" element={<ProjectLayout />}>
+                  <Route path="backlog" element={<BackLog />} />
+                  <Route path="board" element={<Board />} />
+                  <Route path="reports" element={<Reports />} />
+                  <Route path="team" element={<Team />} />
+                  <Route path="docs" element={<Docs />} />
+                </Route>
+                <Route path="my-projects" element={<ProjectsLayout />}>
+                  <Route index element={<DashBoard />} />
+                  <Route path="backlog" element={<BackLog />} />
+                  <Route path="board" element={<Board />} />
+                  <Route path="reports" element={<Reports />} />
+                  <Route path="team" element={<TeamForSupervisor />} />
+                  <Route path="docs" element={<Docs />} />
+                </Route>
+                {/* this one is for the supervisor */}
+                <Route path="projects" element={<Projects />} />
+                <Route path="projects/:id" element={<ProjectDetails />} />
+                {/* end */}
+                {/* for every one */}
+                <Route path="assignments" element={<Assignments mode={mode}/>} />
+                <Route path="assignments/result" element={<AssignmentsResult mode={mode}/>} />
+                <Route path="teams" element={<Teams />} />
+                <Route path="branch" element={<Branch />} />
+                {/* end */}
+                {/* for the head of branch */}
+                <Route path="requests" element={<Requests />} />
+                <Route path="teams" element={<Teams />} />
+                {/* end */}
+                {/* for hob ans supervisor */}
+                <Route path="defense" element={<Defense />} />
+                {/* end */}
+                <Route path="*" element={<NotFoundPage />} />
               </Route>
-            </Route>
-            {/* this one is for the supervisor */}
-            <Route path="projects" element={<Projects />} />
-            <Route path="projects/:id" element={<ProjectDetails />} />
-            {/* end */}
-            {/* for every one */}
-            <Route path="assignments" element={<Assignments mode={mode}/>} />
-            <Route path="assignments/result" element={<AssignmentsResult mode={mode}/>} />
-            <Route path="teams" element={<Teams />} />
-            <Route path="branch" element={<Branch />} />
-            {/* end */}
-            {/* for the head of branch */}
-            <Route path="requests" element={<Requests />} />
-            <Route path="teams" element={<Teams />} />
-            {/* end */}
-            {/* for hob ans supervisor */}
-            <Route path="defense" element={<Defense />} />
-            {/* end */}
-            <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

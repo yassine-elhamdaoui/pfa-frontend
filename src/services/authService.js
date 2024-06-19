@@ -9,7 +9,7 @@ const authenticate = async (
 ) => {
   try {
     const response = await fetch(
-      "http://localhost:8081/api/auth/authenticate",
+      "http://localhost:8080/api/auth/authenticate",
       {
         method: "POST",
         headers: {
@@ -49,7 +49,7 @@ const authenticate = async (
 };
 
 const register = async (jsonData,setSnackbarMessage,setSnackbarOpen,setLoading) => {
-  const response = await fetch("http://localhost:8081/api/auth/register", {
+  const response = await fetch("http://localhost:8080/api/auth/register", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -75,4 +75,50 @@ const register = async (jsonData,setSnackbarMessage,setSnackbarOpen,setLoading) 
   return response;
 };
 
-export { authenticate, register };
+const acceptUser = async (token, id,setSnackbarOpen,setSnackbarMessage,setConfirmLoading) => {
+  console.log(id);
+  const response = await fetch(`http://localhost:8080/api/auth/accept?user=${id}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+  });
+  if (response.ok) {
+    setSnackbarMessage("User accepted successfully");
+    setSnackbarOpen(true);
+    setConfirmLoading(false);
+    return await response.json();
+  } else {
+    setSnackbarMessage("Error accepting user");
+    setSnackbarOpen(true);
+    setConfirmLoading(false);
+    throw new Error("Error accepting user");
+  }
+}
+
+const rejectUser = async (token,id ,setSnackbarOpen,setSnackbarMessage,setConfirmLoading) => {
+  console.log(id);
+
+  const response = await fetch(`http://localhost:8080/api/auth/reject?user=${id}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+  });
+  if (response.ok) {
+    setSnackbarMessage("User rejected successfully");
+    setSnackbarOpen(true);
+    setConfirmLoading(false);
+    return await response.json();
+  } else {
+    setSnackbarMessage("Error rejecting user");
+    setSnackbarOpen(true);
+    setConfirmLoading(false);
+    throw new Error("Error rejecting user");
+  }
+  
+}
+
+export { authenticate, register , acceptUser, rejectUser};

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import ArticleIcon from "@mui/icons-material/Article";
 import AutoModeIcon from "@mui/icons-material/AutoMode";
@@ -772,6 +773,15 @@ p={2}
     
     </>
   )
+=======
+import { useSearchParams } from 'react-router-dom';
+
+function BackLog() {
+  const [searchParams] = useSearchParams();
+  const projectId = searchParams.get("projectId");
+  console.log(projectId);
+  return <div>BackLog</div>;
+>>>>>>> 5e703784410f35170c9a2bb9e680baa305efdfaf
 }
 
   

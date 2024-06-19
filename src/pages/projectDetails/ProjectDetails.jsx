@@ -1,22 +1,21 @@
-import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { getProjectById } from "../../services/projectService";
-import { getSupervisorById } from "../../services/userService";
-import { getTeamById } from "../../services/teamService";
-import { Avatar, Button, Typography, Card, Grid, Paper, CardHeader, AvatarGroup } from "@mui/material";
-import { hasRole } from "../../utils/userUtiles"; 
-import { stringAvatar,stringToColor } from "../../utils/generalUtils";
-import GetAppIcon from '@mui/icons-material/GetApp';
-import { CardContent } from "@mui/material";
-import { CardActions } from "@mui/material";
 import BorderColorOutlinedIcon from '@mui/icons-material/BorderColorOutlined';
-import EventIcon from '@mui/icons-material/Event';
 import CodeIcon from '@mui/icons-material/Code';
+import EventIcon from '@mui/icons-material/Event';
+import GetAppIcon from '@mui/icons-material/GetApp';
 import TimelapseIcon from '@mui/icons-material/Timelapse';
+import { Avatar, AvatarGroup, Button, Card, CardActions, CardContent, CardHeader, Grid, Paper, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import BreadCrumb from "../../components/breadCrumb/BreadCrumb";
 import { downloadFile } from "../../services/documentService";
+import { getProjectById } from "../../services/projectService";
+import { getTeamById } from "../../services/teamService";
+import { getUserById } from "../../services/userService";
+import { stringAvatar, stringToColor } from "../../utils/generalUtils";
+import { hasRole } from "../../utils/userUtiles";
 import ProjectDetailsSkeleton from "./ProjectDetailsSkeleton";
+import Groups2Icon from "@mui/icons-material/Groups2";
 
 
 
@@ -27,37 +26,42 @@ function ProjectDetails() {
   const token = localStorage.getItem("token");
   const userId = localStorage.getItem("userId");
   const mode = localStorage.getItem("mode")
-  const [project, setProject] = useState(null);
+  const [project, setProject] = useState({});
+  const [user , setUser] = useState({});
   const [loading, setLoading] = useState(true);
   const [supervisors, setSupervisors] = useState([]);
-  const [team, setTeam] = useState(null);
+  const [team, setTeam] = useState({});
+  const [projectTeam, setProjectTeam] = useState({});
   const [documents, setDocuments] = useState([]);
   const [report, setReport] = useState(null); 
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const fetchedUser = await getUserById(userId, token);
+        const fetchedTeam = await getTeamById(fetchedUser.teamId, token);
+        setUser(fetchedUser);
         const fetchedProject = await getProjectById(id, token);
+        console.log(fetchedProject);
         setProject(fetchedProject);
 
         const supervisorPromises = fetchedProject.supervisorIds.map((supervisorId) =>
-        getSupervisorById(supervisorId, token)
-      );
-      const fetchedSupervisors = await Promise.all(supervisorPromises);
-      setSupervisors(fetchedSupervisors);
-      if (fetchedProject.teamId) {
-        const fetchedTeam = await getTeamById(fetchedProject.teamId, token);
-        console.log(fetchedTeam);
-        setTeam(fetchedTeam);
-    } else {
-        console.error("Team is null for the project:", fetchedProject);
-    }
+        getUserById(supervisorId, token)
+        );
+        const fetchedSupervisors = await Promise.all(supervisorPromises);
+        console.log(fetchedSupervisors);
+        setSupervisors(fetchedSupervisors);
+          console.log(fetchedTeam);
+          setTeam(fetchedTeam);
+          const fetchedProjectTeam = await getTeamById(fetchedProject.teamId, token);
+          setProjectTeam(fetchedProjectTeam);
+          console.error("Team is null for the project:", fetchedProject);
     
-      // Récupération des documents du projet s'il est ancien
-      if (fetchedProject.status === "old") {
-        setDocuments(fetchedProject.documentIds);
-        setReport(fetchedProject.reportId);
-      }
+        // Récupération des documents du projet s'il est ancien
+        if (fetchedProject.status === "old") {
+          setDocuments(fetchedProject.folders.filter((folder) => folder.type === "DOCUMENTS")[0].documents);
+          setReport(fetchedProject.folders.filter((folder) => folder.type === "REPORT")[0].documents[0]);
+        }
 
       } catch (error) {
         console.error("Error fetching project details:", error);
@@ -69,6 +73,7 @@ function ProjectDetails() {
     fetchData();
   }, [id, token]);
   console.log(documents);
+  console.log(projectTeam);
   if (loading) {
     return <ProjectDetailsSkeleton />;
   }
@@ -77,20 +82,23 @@ function ProjectDetails() {
     return <div>Project not found!</div>;
   }
 
-  const isTeamMember =  Object.keys(team).length > 0 && team.members.some(member => member.id === parseInt(userId));
+  const isTeamMember =
+    projectTeam &&
+    Object.keys(projectTeam).length > 0 &&
+    projectTeam.members.some((member) => member.id === parseInt(userId));
   const isOldProject = project.status === "old";
   const canViewDocuments =
     isOldProject &&
     Object.keys(project).length > 0 &&
-    ((hasRole("ROLE_SUPERVISOR") && 
-      project.supervisorIds.some((id) => (id === userId))) ||
+    ((hasRole("ROLE_SUPERVISOR") &&
+      project.supervisorIds.some((id) => (id === parseInt(userId)))) ||
       hasRole("ROLE_HEAD_OF_BRANCH") ||
       (hasRole("ROLE_STUDENT") && isTeamMember));
 
 
   const hasReport = report !== null;
 
-  const hasDocuments = documents.length > 0;
+  const hasDocuments = documents && documents.length > 0;
   return (
     <div
       style={{
@@ -100,13 +108,31 @@ function ProjectDetails() {
         minHeight: "calc(100vh - 100px)",
       }}
     >
-      <BreadCrumb
-        items={[
-          { label: "Home", link: "/" },
-          { label: "Projects", link: "/projects" },
-          { label: project.title, link: "#" },
-        ]}
-      />
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <BreadCrumb
+          items={[
+            { label: "Home", link: "/" },
+            { label: "Projects", link: "/projects" },
+            { label: project.title, link: "#" },
+          ]}
+        />
+        {hasRole("ROLE_SUPERVISOR") &&
+          project.supervisorIds.some((id) => id === parseInt(userId)) && (
+            <Button
+              component={Link}
+              variant="text"
+              startIcon={<BorderColorOutlinedIcon />}
+            >
+              Edit
+            </Button>
+          )}
+      </div>
       <Grid container spacing={2} style={{ flex: 1 }}>
         <Grid
           item
@@ -116,7 +142,7 @@ function ProjectDetails() {
           sx={{ display: "flex", flexDirection: "column", gap: "20px" }}
         >
           <Paper
-            elevation={3}
+            elevation={2}
             sx={{
               padding: "10px",
               backgroundColor: mode === "dark" ? "#121212" : "rgba(0,0,0,0.06)",
@@ -129,7 +155,7 @@ function ProjectDetails() {
           </Paper>
           <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
             <Paper
-              elevation={3}
+              elevation={2}
               sx={{
                 border: "1px solid rgba(255,255,255,0.5)",
                 borderRadius: "5px",
@@ -148,7 +174,7 @@ function ProjectDetails() {
               </Typography>
             </Paper>
             <Paper
-              elevation={3}
+              elevation={2}
               sx={{
                 border: "1px solid rgba(255,255,255,0.5)",
                 borderRadius: "5px",
@@ -167,7 +193,7 @@ function ProjectDetails() {
               </Typography>
             </Paper>
             <Paper
-              elevation={3}
+              elevation={2}
               sx={{
                 border: "1px solid rgba(255,255,255,0.5)",
                 borderRadius: "5px",
@@ -227,8 +253,8 @@ function ProjectDetails() {
                     width: 100,
                     valueGetter: (params) =>
                       params.row === report
-                        ? `${(params.row.size / 1024).toFixed(2)} KB`
-                        : `${(params.row.size / 1024).toFixed(2)} KB`,
+                        ? `${(params.row.fileSize / 1024).toFixed(2)} KB`
+                        : `${(params.row.fileSize / 1024).toFixed(2)} KB`,
                   },
                   {
                     field: "downloadLink",
@@ -270,17 +296,6 @@ function ProjectDetails() {
               />
             </div>
           )}
-          {hasRole("ROLE_SUPERVISOR") && (
-            <Button
-              sx={{ position: "fixed", bottom: 16, right: 16 }}
-              component={Link}
-              to={/edit-project/`${id}`}
-              variant="contained"
-              color="primary"
-            >
-              Edit Project Details <BorderColorOutlinedIcon />
-            </Button>
-          )}
         </Grid>
         <Grid item xs={12} md={5} lg={4}>
           <Paper
@@ -290,7 +305,8 @@ function ProjectDetails() {
               display: "flex",
               flexDirection: "column",
               gap: "10px",
-              height: "100%",
+              height: "fit-content",
+              maxHeight: "100%",
               backgroundColor: mode === "dark" ? "#121212" : "rgba(0,0,0,0.06)",
             }}
           >
@@ -309,7 +325,7 @@ function ProjectDetails() {
                     <Avatar
                       sx={{
                         bgcolor: stringToColor(
-                         `${supervisor.firstName}` `${supervisor.lastName}`
+                          `${supervisor.firstName} ${supervisor.lastName}`
                         ),
                       }}
                     >
@@ -326,7 +342,7 @@ function ProjectDetails() {
               </Card>
             ))}
             <BreadCrumb items={[{ label: "Team", link: "#" }]} />
-            {team && (
+            {Object.keys(projectTeam).length > 0 ? (
               <Card
                 sx={{
                   display: "flex",
@@ -338,44 +354,64 @@ function ProjectDetails() {
                 }}
               >
                 <div>
-                  <Typography variant="body1">{team.name}</Typography>
+                  <Typography variant="body1">{projectTeam.name}</Typography>
                 </div>
                 <AvatarGroup max={5}>
-                  {team.members.map((member) => (
+                  {projectTeam.members.map((member) => (
                     <Avatar
                       key={member.id}
                       {...stringAvatar(
-                       ` ${member.firstName} ${member.lastName}`
+                        `${member.firstName} ${member.lastName}`
                       )}
                     />
                   ))}
                 </AvatarGroup>
               </Card>
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <Groups2Icon sx={{ fontSize: 70, color: "lightgray" }} />
+                <Typography variant="body1" textAlign="center">
+                  No team assigned yet
+                </Typography>
+              </div>
             )}
-            {project.codeLink && (
-              <>
-                <BreadCrumb items={[{ label: "Code Repository", link: "#" }]} />
-                <Card
-                  sx={{
-                    backgroundColor:
-                      mode === "dark" ? "#121212" : "rgba(0,0,0,0.06)",
-                  }}
-                >
-                  <CardContent>
-                    <Typography variant="body1">{project.codeLink}</Typography>
-                  </CardContent>
-                  <CardActions>
-                    <Button
-                      href={project.codeLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Visit Repository
-                    </Button>
-                  </CardActions>
-                </Card>
-              </>
-            )}
+            {project.codeLink &&
+              Object.keys(team).length > 0 &&
+              Object.keys(project).length > 0 &&
+              team.id === project.teamId && (
+                <>
+                  <BreadCrumb
+                    items={[{ label: "Code Repository", link: "#" }]}
+                  />
+                  <Card
+                    sx={{
+                      backgroundColor:
+                        mode === "dark" ? "#121212" : "rgba(0,0,0,0.06)",
+                    }}
+                  >
+                    <CardContent>
+                      <Typography variant="body1">
+                        {project.codeLink}
+                      </Typography>
+                    </CardContent>
+                    <CardActions>
+                      <Button
+                        href={project.codeLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Visit Repository
+                      </Button>
+                    </CardActions>
+                  </Card>
+                </>
+              )}
           </Paper>
         </Grid>
       </Grid>

@@ -33,22 +33,37 @@ const MainLayout = ({ mode, setMode }) => {
   };
 
   return (
-    <div className="app" style={{ height: "100%" , minHeight:"100svh"}}>
+    <div className="app" style={{ height: "100%", minHeight: "100svh" }}>
       <NavBar handleDrawerOpen={handleDrawerOpen} setMode={setMode} />
       <Box
-        className="container"
         sx={{
-          height: "100%",
-          minHeight: "100svh",
-          padding: { xs: "80px 10px 10px 10px", md: "80px 20px 20px 20px" },
+
+          // backgroundColor: mode === "light" ? "#f5f6fa" : "#121212",
           marginLeft: window.innerWidth <= 900 ? 0 : open ? "230px" : "0px",
           transition: "margin-left 0.2s ease",
         }}
       >
-        <Outlet />
+        <Box
+          className="container"
+          sx={{
+            height: "100%",
+            minHeight: "100svh",
+            padding: { xs: "80px 10px 10px 10px", md: "80px 20px 20px 20px" },
+          }}
+        >
+          <Outlet />
+        </Box>
+        <div
+          style={{
+            backgroundColor: mode === "light" ? "#f5f6fa" : "#121212",
+            backgroundImage:
+              "linear-gradient(rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.09))",
+          }}
+        >
+          <Footer />
+        </div>
       </Box>
       <SideBar open={open} mode={mode} handleDrawerClose={handleDrawerClose} />
-      {/* <Footer /> */}
     </div>
   );
 };

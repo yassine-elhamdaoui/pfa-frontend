@@ -1,14 +1,32 @@
+@import "../node_modules/@syncfusion/ej2-base/styles/material.css";
+@import "../node_modules/@syncfusion/ej2-buttons/styles/material.css";
+@import "../node_modules/@syncfusion/ej2-calendars/styles/material.css";
+@import "../node_modules/@syncfusion/ej2-dropdowns/styles/material.css";
+@import "../node_modules/@syncfusion/ej2-inputs/styles/material.css";
+@import "../node_modules/@syncfusion/ej2-lists/styles/material.css";
+@import "../node_modules/@syncfusion/ej2-navigations/styles/material.css";
+@import "../node_modules/@syncfusion/ej2-popups/styles/material.css";
+@import "../node_modules/@syncfusion/ej2-splitbuttons/styles/material.css";
+@import "../node_modules/@syncfusion/ej2-react-schedule/styles/material.css";
+
 *{
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   
 }
+html {
+  overflow-x: hidden;
+}
+#root{
+  overflow-x: hidden;
+}
 body {
   font-family: 'Roboto', sans-serif;
   min-height: 100vh;
+  padding-right: 0 !important;
   overflow-y: auto; // Enable vertical scrollbar
-
+  overflow-x: hidden; // Disable horizontal scrollbar
   #root {
     display: flex;
     flex-direction: column;

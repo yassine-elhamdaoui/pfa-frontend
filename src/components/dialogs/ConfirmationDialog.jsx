@@ -6,6 +6,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import { LoadingButton } from "@mui/lab";
+import { set } from "lodash";
 
 
 
@@ -20,6 +21,7 @@ export default function ConfirmationDialog({
 }) {
  
   const onConfirmDialogClose = () => {
+    setLoading(false);
     setOpenDialog(false);
   };
   const onConfirmDialogConfirm = (id) => {

@@ -1,4 +1,4 @@
-import { Skeleton } from "@mui/material";
+import { Paper, Skeleton } from "@mui/material";
 
 // eslint-disable-next-line react/prop-types
 export default function GridTableSkeleton({mode}) {
@@ -17,7 +17,7 @@ export default function GridTableSkeleton({mode}) {
           variant="rectangular"
           height={25}
           sx={{ borderRadius: "20px" }}
-          width={130}
+          width={170}
           animation="wave"
         />
         <Skeleton
@@ -46,11 +46,9 @@ export default function GridTableSkeleton({mode}) {
             WebkitOverflowScrolling: "touch",
             borderRadius: "5px 5px 0 0",
             scrollbarWidth: "none",
-            backgroundColor:
-              mode === "dark"
-                ? "rgba(255, 255, 255, 0.14)"
-                : "rgba(0, 0, 0, 0.13)",
             height: "50px",
+            backgroundColor:
+              mode === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
           }}
         >
           {[...Array(20)].map((_, index) => (
@@ -65,14 +63,16 @@ export default function GridTableSkeleton({mode}) {
             </div>
           ))}
         </div>
-        {[...Array(Math.floor((window.innerHeight - 300) / 45))].map((_, index) => (
-          <Skeleton
-            key={index}
-            variant="rectangular"
-            height={45}
-            animation={index % 2 === 0 ? "wave" : "wave-reverse"} // Alternate between "wave" and "wave-reverse"
-          />
-        ))}
+        {[...Array(Math.floor((window.innerHeight - 300) / 45))].map(
+          (_, index) => (
+            <Skeleton
+              key={index}
+              variant="rectangular"
+              height={45}
+              animation={index % 2 === 0 ? "wave" : "wave-reverse"} // Alternate between "wave" and "wave-reverse"
+            />
+          )
+        )}
         <Skeleton
           variant="rectangular"
           height={45}

@@ -16,6 +16,7 @@ import {
   useMediaQuery,
   Typography,
   Avatar,
+  Divider,
 } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 import CloseIcon from "@mui/icons-material/Close";
@@ -24,6 +25,10 @@ import createProject from "../../services/projectService";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { stringAvatar } from "../../utils/generalUtils";
 import { StyledDialog, StyledDialogContent, StyledGrid, VisuallyHiddenInput } from "./createProjectDialog";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import { hasRole } from "../../utils/userUtiles";
+import { getAllTeams } from "../../services/teamService";
+import { set } from "lodash";
 const lightColors = [
    "rgba(173, 216, 230, 0.5)",
    "rgba(216, 191, 216, 0.5)",
@@ -155,8 +160,11 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
       iconStyle: { fontSize: "20px" },
     },
   ]);
+  const mode = localStorage.getItem("mode");
+  const isHOB = hasRole("ROLE_HEAD_OF_BRANCH");
   const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("sm"));
   const [supervisors, setSupervisors] = useState([]);
+  const [teams , setTeams] = useState([]);
   const [projectType, setProjectType] = useState("old");
   const [formData, setFormData] = useState({
     title: "",
@@ -164,15 +172,22 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
     techStack: [],
     codeLink: "",
     branch: 1,
+    academicYear:"",
     supervisors: [],
     files: [],
     report: null,
+    team: null,
   });
   const [loading, setLoading] = useState(false);
+
+    const [uploadedFiles, setUploadedFiles] = useState([]);
+    const [uploadedReport, setUploadedReport] = useState(null);
+
 
   useEffect(() => {
     async function fetchData() {
       const users = await getUsers(token);
+      const fetchedTeams = await getAllTeams(token);
       setSupervisors(
         users.filter(
           (user) =>
@@ -182,6 +197,7 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
             )
         )
       );
+      setTeams(fetchedTeams.filter((team) => team.projectId === null));
     }
     fetchData();
   }, []);
@@ -210,6 +226,12 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
       techStack: value,
     }));
   };
+  const handleTeamChange = (event, value) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      team: value,
+    }));
+  };
 
   const handleSupervisorsChange = (event, value) => {
     setFormData((prevFormData) => ({
@@ -219,14 +241,39 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
   };
 
   const handleFilesChange = (event) => {
+    const files = event.target.files;
+    console.log(files);
+    const uploadedFilesList = Array.from(files).map((file) => ({
+      name: file.name,
+      size: file.size,
+    }));
+    setUploadedFiles(uploadedFilesList);
     setFormData((prevFormData) => ({
       ...prevFormData,
-      files: Array.from(event.target.files).slice(0, 10),
+      files: Array.from(files).slice(0, 10), // Limiting to first 10 files
+    }));
+  };
+
+  const handleRemoveFileFromFiles = (index) => {
+    setUploadedFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      files: prevFormData.files.filter((_, i) => i !== index),
     }));
   };
 
   const handleReportFileChange = (event) => {
-    setFormData({ ...formData, report: event.target.files[0] });
+    const file = event.target.files[0];
+    const uploadedReport = {
+      name: file.name,
+      size: file.size,
+    };
+    setUploadedReport(uploadedReport);
+    setFormData({ ...formData, report: file });
+  };
+  const handleRemoveReport = () => {
+    setUploadedReport(null);
+    setFormData({ ...formData, report: null });
   };
 
   const handleSubmit = async (event) => {
@@ -240,7 +287,20 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
     data.append("status", projectType);
     data.append("techStack", techStack);
     data.append("codeLink", formData.codeLink);
+    const year = new Date().getFullYear();
+    const month = new Date().getMonth();
+    if (month >= 9 && month <= 12) {
+      formData.academicYear = `${year}/${year + 1}`;
+    } else if (month >= 1 && month <= 7) {
+      formData.academicYear = `${year - 1}/${year}`;
+    }
+    data.append("academicYear",formData.academicYear)
     data.append("branch", formData.branch);
+    if (formData.team && formData.team.id !== null) {
+      data.append("team",formData.team.id);
+    }else{
+      data.append("team", null)
+    }
     data.append(
       "supervisors",
       formData.supervisors.map((supervisor) => supervisor.id)
@@ -254,8 +314,9 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
     for (let pair of data.entries()) {
       console.log(pair[0] + ", " + pair[1]);
     }
-    await createProject(token, data ,setSnackbarOpen , setSnackbarMessage);
+
     setLoading(false);
+    await createProject(token, data ,setSnackbarOpen , setSnackbarMessage);
     handleModalClose();
   };
 
@@ -354,6 +415,7 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
             <Autocomplete
               multiple
               id="techStack"
+              limitTags={4}
               options={techOptions}
               filterSelectedOptions
               disableCloseOnSelect
@@ -380,6 +442,32 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
               )}
             />
           </Grid>
+          {/* Team stuff */}
+          {isHOB && (
+            <Grid item xs={12}>
+              <Autocomplete
+                id="team"
+                options={teams}
+                getOptionLabel={(option) => option.name}
+                renderOption={(props, option) => (
+                  <li {...props}>
+                    <div style={{display:"flex",flexDirection:"column"}}>
+                      <p>{option.name}</p>
+                      <Typography color="textSecondary" variant="body2">{option.responsible.email}</Typography>
+                    </div>
+                  </li>
+                )}
+                onChange={handleTeamChange}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Team"
+                    placeholder="Select Team"
+                  />
+                )}
+              />
+            </Grid>
+          )}
           {/* Supervisors */}
           <Grid item xs={12}>
             <Autocomplete
@@ -443,51 +531,144 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
           )}
           {projectType === "old" && (
             <StyledGrid item xs={12}>
-              <Button
-                component="label"
-                role={undefined}
-                variant="contained"
-                tabIndex={-1}
-                fullWidth={isSmallScreen}
-                startIcon={<CloudUploadIcon />}
+              <div
+                style={{
+                  border: `1px solid ${
+                    mode === "dark" ? "#d3d3d350" : "rgba(0,0,0,0.3)"
+                  }`,
+                  width: "100%",
+                }}
               >
-                Upload Report
-                <VisuallyHiddenInput
-                  type="file"
-                  name="report"
-                  id="report"
-                  onChange={handleReportFileChange}
-                />
-              </Button>
-              <Button
-                component="label"
-                role={undefined}
-                variant="contained"
-                tabIndex={-1}
-                fullWidth={isSmallScreen}
-                startIcon={<CloudUploadIcon />}
+                <Button
+                  component="label"
+                  role={undefined}
+                  variant="text"
+                  sx={{
+                    color: mode === "dark" ? "lightgray" : "rgba(0,0,0,0.6)",
+                    width: "100%",
+                  }}
+                  tabIndex={-1}
+                  fullWidth={isSmallScreen}
+                  startIcon={<CloudUploadIcon />}
+                >
+                  Upload Report
+                  <VisuallyHiddenInput
+                    type="file"
+                    name="report"
+                    id="report"
+                    onChange={handleReportFileChange}
+                  />
+                </Button>
+                {uploadedReport && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: "5px",
+                      width: "100%",
+                      minHeight: "60px",
+                      borderTop: `1px solid ${
+                        mode === "dark" ? "#d3d3d350" : "rgba(0,0,0,0.3)"
+                      }`,
+                      padding: "10px",
+                    }}
+                  >
+                    <div>
+                      <Typography sx={{ fontSize: "13px" }}>
+                        {uploadedReport.name}
+                      </Typography>
+                      <Typography
+                        sx={{ fontSize: "11px", marginTop: "3px" }}
+                        color="textSecondary"
+                      >
+                        {(uploadedReport.size * 0.000001).toFixed(2)} MB
+                      </Typography>
+                    </div>
+                    <DeleteOutlineIcon 
+                      sx={{ cursor: "pointer" }}
+                    onClick={handleRemoveReport} />
+                  </div>
+                )}
+              </div>
+              <div
+                style={{
+                  border: `1px solid ${
+                    mode === "dark" ? "#d3d3d350" : "rgba(0,0,0,0.3)"
+                  }`,
+                  width: "100%",
+                }}
               >
-                Upload Files
-                <VisuallyHiddenInput
-                  type="file"
-                  name="files"
-                  id="files"
-                  multiple
-                  onChange={handleFilesChange}
-                />
-              </Button>
+                <Button
+                  component="label"
+                  role={undefined}
+                  variant="text"
+                  sx={{
+                    color: mode === "dark" ? "lightgray" : "rgba(0,0,0,0.6)",
+                    width: "100%",
+                  }}
+                  tabIndex={-1}
+                  fullWidth={isSmallScreen}
+                  startIcon={<CloudUploadIcon />}
+                >
+                  Upload Files
+                  <VisuallyHiddenInput
+                    type="file"
+                    name="files"
+                    id="files"
+                    multiple
+                    onChange={handleFilesChange}
+                  />
+                </Button>
+                {uploadedFiles.map((file, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: "5px",
+                      width: "100%",
+                      minHeight: "60px",
+                      borderTop: `1px solid ${
+                        mode === "dark" ? "#d3d3d350" : "rgba(0,0,0,0.3)"
+                      }`,
+                      padding: "10px",
+                    }}
+                  >
+                    <div>
+                      <Typography sx={{ fontSize: "13px" }} key={index}>
+                        {file.name}
+                      </Typography>
+                      <Typography
+                        sx={{ fontSize: "11px", marginTop: "3px" }}
+                        color="textSecondary"
+                        key={index}
+                      >
+                        {(file.size * 0.000001).toFixed(2)} MB
+                      </Typography>
+                    </div>
+                    <DeleteOutlineIcon
+                      sx={{ cursor: "pointer" }}
+                      onClick={() => handleRemoveFileFromFiles(index)}
+                    />
+                  </div>
+                ))}
+              </div>
             </StyledGrid>
           )}
         </Grid>
       </StyledDialogContent>
       <DialogActions>
-        <Button onClick={handleModalClose}>Cancel</Button>
+        <Button onClick={handleModalClose} color="error">
+          Cancel
+        </Button>
         <LoadingButton
           type="submit"
           loading={loading}
           loadingIndicator="creating..."
           sx={{ paddingLeft: "15px", paddingRight: "15px" }}
-          variant="contained"
+          variant="outlined"
         >
           <span>Save project</span>
         </LoadingButton>

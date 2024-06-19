@@ -1,5 +1,5 @@
 const getUsers = async (token) => {
-  const users = await fetch("http://localhost:8081/api/users", {
+  const users = await fetch("http://localhost:8080/api/users", {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -14,29 +14,23 @@ const getUsers = async (token) => {
   return users;
 };
 
-export { getUsers };
-
-
-
-export const getSupervisorById = async (supervisorId, token) => {
+const getUserById = async (userId, token) => {
   try {
-    const response = await fetch(`http://localhost:8081/api/users/${supervisorId}`, {
+    const response = await fetch(`http://localhost:8080/api/users/${userId}`, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
-
     if (!response.ok) {
-      throw new Error(`Failed to fetch supervisors: ${response.status}`);
+      throw new Error("Failed to fetch user");
     }
-
-    const supervisors = await response.json();
-    return supervisors;
+    const user = await response.json();
+    return user;
   } catch (error) {
-    console.error("Error fetching supervisors:", error);
+    console.error("Error fetching user:", error);
     throw error;
   }
-};
-
+}
+export { getUsers , getUserById};

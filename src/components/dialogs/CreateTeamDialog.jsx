@@ -16,6 +16,7 @@ import { useState } from "react";
 import Avatar from "@mui/material/Avatar";
 import CloseIcon from "@mui/icons-material/Close";
 import { stringAvatar } from "../../utils/generalUtils";
+import { getAcademicYear } from "../../services/projectService";
 
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="down" ref={ref} {...props} />;
@@ -70,6 +71,14 @@ function CreateTeamDialog({ teamDialogOpen, handleModalClose ,setSnackbarOpen, s
   }, []);
 
   const handleSubmit =  (event) => {
+        let academicYear 
+          const year = new Date().getFullYear();
+          const month = new Date().getMonth();
+          if (month >= 9 && month <= 12) {
+            academicYear = `${year}/${year + 1}`;
+          } else if (month >= 1 && month <= 7) {
+            academicYear = `${year - 1}/${year}`;
+          }
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const formJson = Object.fromEntries(formData.entries());
@@ -77,7 +86,8 @@ function CreateTeamDialog({ teamDialogOpen, handleModalClose ,setSnackbarOpen, s
       name: formJson.name,
       // Récupérer les IDs des utilisateurs sélectionnés à partir de selectedUsers
       membersIds: selectedUsers.map((user) => user.id),
-    };
+      academicYear: academicYear
+    };a
     try {
       const token = localStorage.getItem("token");
       if (!token) {

@@ -1,10 +1,11 @@
-export const getAllTeams = async (token) => {
+
+export const getAllTeams = async (token,academicYear) => {
     const branchId = localStorage.getItem("branchId");
     const studiedBranchId = localStorage.getItem("studiedBranchId");
 
-    const selectedBranchId = branchId !== "null" ? branchId : studiedBranchId;
+    const selectedBranchId = branchId !== "null" ? branchId : studiedBranchId === "null" ? 1 : studiedBranchId;
 
-    const allTeams = await fetch("http://localhost:8081/api/teams", {
+    const allTeams = await fetch("http://localhost:8080/api/teams?academicYear="+academicYear, {
         method: "GET",
         headers: {
             Authorization: `Bearer ${token}`,
@@ -26,8 +27,9 @@ export const getAllTeams = async (token) => {
 // teamService.js
 
 const createTeam = async (teamData, token, setSnackbarOpen, setSnackbarMessage) => {
+  console.log(teamData);
     try {
-        const response = await fetch('http://localhost:8081/api/teams', {
+        const response = await fetch('http://localhost:8080/api/teams', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -42,7 +44,7 @@ const createTeam = async (teamData, token, setSnackbarOpen, setSnackbarMessage) 
             console.error('Failed to create team:', data);
             throw new Error('Failed to create team');
         }
-
+        localStorage.setItem("team", data.id);
         console.log('Team created with success here is Backend response:', data);
         setSnackbarMessage("Team created successfully"); // Message de succès
         setSnackbarOpen(true); // Ouvrir le Snackbar
@@ -55,7 +57,6 @@ const createTeam = async (teamData, token, setSnackbarOpen, setSnackbarMessage) 
     }
 };
 
-export { createTeam };
 
 
 
@@ -80,4 +81,8 @@ export const getTeamById = async (teamId, token) => {
       console.error("Error fetching team:", error);
       throw error;
     }
-  };
+    
+};
+
+
+export { createTeam , getTeamById};

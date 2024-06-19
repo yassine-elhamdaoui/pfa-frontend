@@ -70,7 +70,11 @@ export default function Authenticate() {
       localStorage.setItem("token", res.token);
       setError(null);
       setLoading(false);
-      navigate("/");
+        var a = document.createElement("a");
+        a.href = "/";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
     } else {
       setError(res);
     }
