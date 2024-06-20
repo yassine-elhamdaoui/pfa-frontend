@@ -11,6 +11,7 @@ import { set } from "lodash";
 
 
 export default function ConfirmationDialog({
+  id,
   message,
   openDialog,
   setOpenDialog,
@@ -18,13 +19,19 @@ export default function ConfirmationDialog({
   setLoading,
   loading,
 }) {
+ 
   const onConfirmDialogClose = () => {
     setLoading(false);
     setOpenDialog(false);
   };
-  const onConfirmDialogConfirm = () => {
+  const onConfirmDialogConfirm = (id) => {
     setLoading(true);
+    if (id==null) {
     handleConfirmClick();
+    } else {
+      handleConfirmClick(id)
+    }
+   
     setOpenDialog(false);
   };
 
@@ -46,8 +53,8 @@ export default function ConfirmationDialog({
           loading={loading}
           sx={{marginLeft:"15px" , marginRight:"15px"}}
           loadingIndicator="Loading..."
-          variant="outlined"
-          onClick={onConfirmDialogConfirm}
+          variant="contained"
+          onClick={()=>onConfirmDialogConfirm(id)}
           autoFocus
         >
           <span>Confirm</span>

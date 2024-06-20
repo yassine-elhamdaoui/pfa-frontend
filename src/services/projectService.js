@@ -322,9 +322,29 @@ export const makePreferences = async (token, ranking, setSnackbarOpen, setSnackb
     setSnackbarMessage("Failed to save preferences");
     setSnackbarOpen(true);
     return await response.json();
+  }}
 
-  }
-}
+// export const getProjectById = async (projectId, token) => {
+//   try {
+//     const response = await fetch(`http://localhost:8080/api/projects/${projectId}`, {
+//       method: "GET",
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//         "Content-Type": "application/json",
+//       },
+//     });
+
+//     if (!response.ok) {
+//       throw new Error(`Failed to fetch project: ${response.status}`);
+//     }
+
+//     const project = await response.json();
+//     return project;
+//   } catch (error) {
+//     console.error("Error fetching project:", error);
+//     throw error;
+//   }
+// }
 
 
 

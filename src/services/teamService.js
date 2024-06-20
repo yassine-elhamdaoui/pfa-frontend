@@ -60,25 +60,30 @@ const createTeam = async (teamData, token, setSnackbarOpen, setSnackbarMessage) 
 };
 
 
-const getTeamById = async (teamId, token) => {
+
+
+
+export const getTeamById = async (teamId, token) => {
   try {
-    const response = await fetch(`http://localhost:8080/api/teams/${teamId}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    if (!response.ok) {
-      console.log(await response.json());
-      throw new Error("Failed to fetch team");
+      const response = await fetch(`http://localhost:8081/api/teams/${teamId}`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Failed to fetch team: ${response.status}`);
+      }
+  
+      const team = await response.json();
+      return team;
+    } catch (error) {
+      console.error("Error fetching team:", error);
+      throw error;
     }
-    const team = await response.json();
-    return team;
-  } catch (error) {
-    console.error("Error fetching team:", error);
-    throw error;
-  }
+    
 };
 
 
