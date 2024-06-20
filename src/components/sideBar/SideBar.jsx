@@ -33,12 +33,6 @@ import FolderCopyRoundedIcon from "@mui/icons-material/FolderCopyRounded";
 const studentStuff = [
   { id: 0, text: "BackLog", icon: <SubjectIcon />, path: "/dashboard/project/backlog" },
   { id: 1, text: "Board", icon: <ViewWeekIcon />, path: "/dashboard/project/board" },
-  {
-    id: 2,
-    text: "Reports",
-    icon: <QueryStatsIcon />,
-    path: "/project/reports",
-  },
   { id: 3, text: "Team", icon: <PeopleAltIcon />, path: "/dashboard/project/team" },
   { id: 43, text: "Docs", icon: <FolderCopyRoundedIcon />, path: "/dashboard/project/docs" },
 ];
@@ -227,17 +221,7 @@ export default function SideBar({ mode, open, handleDrawerClose }) {
                           </ListItemIcon>
                           <ListItemText sx={{ ml: -1 }} primary="Team" />
                         </ListItemButton>
-                        <ListItemButton
-                          sx={{ ml: 2, borderRadius: "5px" }}
-                          onClick={(event) => {
-                            navigate(`/dashboard/my-projects/reports?projectId=${project.id}`);
-                          }}
-                        >
-                          <ListItemIcon>
-                            <QueryStatsIcon />
-                          </ListItemIcon>
-                          <ListItemText sx={{ ml: -1 }} primary="Reports" />
-                        </ListItemButton>
+  
                         <ListItemButton
                           sx={{ ml: 2, borderRadius: "5px" }}
                           onClick={(event) => {

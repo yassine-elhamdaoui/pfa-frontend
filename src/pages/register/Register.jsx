@@ -86,9 +86,11 @@ export default function Register() {
           alignItems: "center",
         }}
       >
-        <Avatar sx={{ m: 1, bgcolor: "secondary.main" }}>
-          <LockOutlinedIcon />
-        </Avatar>
+        <Avatar
+          src="/src/assets/auth_logo.png"
+          sx={{ m: 1, bgcolor: "secondary.main" }}
+        />
+
         <Typography component="h1" variant="h5">
           Sign up
         </Typography>

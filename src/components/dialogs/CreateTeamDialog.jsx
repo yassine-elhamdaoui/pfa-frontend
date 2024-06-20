@@ -87,7 +87,7 @@ function CreateTeamDialog({ teamDialogOpen, handleModalClose ,setSnackbarOpen, s
       // Récupérer les IDs des utilisateurs sélectionnés à partir de selectedUsers
       membersIds: selectedUsers.map((user) => user.id),
       academicYear: academicYear
-    };a
+    };
     try {
       const token = localStorage.getItem("token");
       if (!token) {

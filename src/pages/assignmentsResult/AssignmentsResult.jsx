@@ -182,14 +182,14 @@ function AssignmentsResult({ mode }) {
           ]}
         />
         {assignment && assignment.completed === false && isHOB ? (
-          <>
+          <div style={{display:"flex" , justifyContent:"center"}}>
             <Button variant="text" onClick={handleEditDialogOpen}>
               Edit
             </Button>
             <Button variant="outlined" onClick={handleMakeAssignment}>
               Validate
             </Button>
-          </>
+          </div>
         ) : null}
       </div>
       <GridTable columns={columns} rows={rows} loading={loading} mode={mode} />

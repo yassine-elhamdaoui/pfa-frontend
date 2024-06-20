@@ -20,6 +20,8 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import ConfirmationDialog from "../../components/dialogs/ConfirmationDialog";
 import { stringAvatar } from "../../utils/generalUtils";
 import BreadCrumb from "../../components/breadCrumb/BreadCrumb";
+import { downLoadProfileImage } from "../../services/userService";
+import { forEach } from "lodash";
 
 
 const token = localStorage.getItem("token");
@@ -39,10 +41,12 @@ function Assignments({ mode }) {
   const [assignmentLoading, setAssignmentLoading] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+
+  const [responsiblesImages , setResponsiblesImages] = useState([]);
+  const [membersImages , setMembersImages] = useState([]);
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
-
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -62,6 +66,28 @@ function Assignments({ mode }) {
         setTeams(fetchedTeams);
         setPreferences(fetchedPreferences);
         setAssignment(fetchedAssignment);
+        forEach(fetchedTeams, async (team) => {
+          if (team.responsible.profileImage === null) {
+            // team.responsible.profileImage = stringAvatar(team.responsible.firstName);
+          }else{
+            const url = await downLoadProfileImage(team.responsible.id, token);
+            setResponsiblesImages([...responsiblesImages, {id: team.responsible.id, url: url}]);
+          }
+        });
+
+        forEach(fetchedTeams, async (team) => {
+          team.members.forEach(async (member) => {
+            console.log(member);
+            if (member.profileImage === null) {
+              // member.profileImage = stringAvatar(member.firstName);
+            }else{
+              const url = await downLoadProfileImage(member.id, token);
+              setMembersImages([...membersImages, {id: member.id, url: url}]);
+            }
+          });
+        });
+
+
         console.log(assignment);
         console.log(Object.keys(assignment).length);
         setLoading(false);
@@ -109,6 +135,7 @@ function Assignments({ mode }) {
     navigate(`/dashboard/project/team/${teamId}/preferences`);
   };
 
+  console.log(membersImages);
   const columns = [
     {
       field: "id",
@@ -136,15 +163,15 @@ function Assignments({ mode }) {
           color="inherit"
         >
           <Avatar
-            {...stringAvatar(
-              params.row.responsible.firstName +
-                " " +
-                params.row.responsible.lastName
-            )}
+            src={responsiblesImages.find((image) => image.id === params.row.responsible.id)?.url}
+            sx={{ height: "40px", width: "40px" }}
           />
         </IconButton>
       ),
     },
+
+
+    
     {
       field: "members",
       headerName: "Members",
@@ -155,7 +182,7 @@ function Assignments({ mode }) {
           {params.row.members.map((member) => (
             <Avatar
               key={member.id}
-              {...stringAvatar(member.firstName + " " + member.lastName)}
+              src={membersImages.find((image) => image.id === member.id)?.url}
             />
           ))}
         </AvatarGroup>
@@ -201,6 +228,7 @@ function Assignments({ mode }) {
     hasPreferences: teamsWithPreferences.some((t) => t.id === team.id),
   }));
 
+  console.log(membersImages);
   return isHOB ? (
     loading ? (
       <GridTableSkeleton mode={mode} />

@@ -59,7 +59,7 @@ function Board() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const [membersImages , setMembersImages] = useState([]);
+  const [membersImages , setMembersImages] = useState([{}]);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const handleSnackbarClose = () => {
@@ -79,6 +79,17 @@ function Board() {
           console.log(fetchedUser);
           console.log(fetchedTeam);
           setTeam(fetchedTeam);
+          const membersStuff = [];
+          forEach(fetchedTeam.members, async (member) => {
+            const url = await downLoadProfileImage(member.id, token);
+            console.log(member.firstName);
+            membersStuff.push({
+              id: member.id,
+              name: member.firstName + " " + member.lastName,
+              url: url,
+            });
+          });
+          setMembersImages(membersStuff);
           setProject(fetchedTeam.project);
           console.log(fetchedTeam.project);
           const fetchedUserStories = await getUserStories(
@@ -92,11 +103,6 @@ function Board() {
             console.log(teamId );
             const fetchedTeam = await getTeamById(teamId , token);
             console.log(fetchedTeam);
-            forEach(fetchedTeam.members, async (member) => {
-              const url = await downLoadProfileImage(member.id, token);
-              console.log(member.firstName);
-              setMembersImages((prev) => [...prev, {id:member.id,name:member.firstName+" "+member.lastName , url:url}]);
-              });
             setTeam(fetchedTeam);
             setProject(fetchedTeam.project);
             console.log(fetchedTeam.project);
@@ -106,6 +112,28 @@ function Board() {
             );
             console.log(userStories);
             setUserStories(fetchedUserStories);
+
+
+            forEach(team.members, async (member) => {
+              console.log(member.firstName);
+              const url = await downLoadProfileImage(
+                member.id,
+                token
+              );
+              console.log(member.firstName);
+              setMembersImages((prev) => [
+                ...prev,
+                {
+                  id: member.id,
+                  name: member.firstName + " " + member.lastName,
+                  url: url,
+                },
+              ]);
+            });
+
+
+
+            
             setLoading(false);
           } else {
             throw new Error("User is not in a team");
@@ -135,7 +163,9 @@ function Board() {
   };
 
   const swimlaneTemplate =  (data) => {
-
+    console.log(data);
+    console.log(membersImages);
+    
     if (data && data.keyField !== "") {
       console.log(data);
       return (
@@ -147,7 +177,6 @@ function Board() {
             padding: "5px",
           }}
         >
-          {/* <Avatar {...stringAvatar(data.keyField, 30, 15)} /> */}
           <Avatar
             src={
               membersImages.find(
@@ -158,11 +187,10 @@ function Board() {
           />
 
           <span>
-            {
+            {membersImages.length > 0 &&
               membersImages.find(
                 (member) => member.id === parseInt(data.keyField)
-              )?.name
-            }
+              )?.name}
           </span>
           <Typography variant="body3" color="textSecondary">
             {data.count} items
@@ -192,18 +220,22 @@ function Board() {
           project && Object.keys(project).length > 0 ? (
             userStories && userStories.length > 0 ? (
               <>
-                <BreadCrumb
-                  items={[
-                    { label: "Home", url: "/" },
-                    { label: "Board", url: "/board" },
-                  ]}
-                />
                 <Box
                   sx={{
-                    width: "fit-content",
-                    marginLeft: window.innerWidth > 600 ? "-15px" : "0",
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "15px",
+                    justifyContent: "space-between",
+                    flexWrap:"wrap"
                   }}
                 >
+                  <BreadCrumb
+                    items={[
+                      { label: "Home", url: "/" },
+                      { label: "Board", url: "/board" },
+                    ]}
+                  />
                   <Search
                     sx={{
                       margin: 0,

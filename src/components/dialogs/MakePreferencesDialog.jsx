@@ -137,7 +137,7 @@ return (
                   }}
                 >
                   <HighlightOffIcon />
-                </IconButton>a
+                </IconButton>
               </div>
             ) : (
               <Autocomplete

@@ -270,7 +270,7 @@ function Projects() {
               { label: "Projects", link: "#" },
               {
                 label: loading2 ? (
-                  <Skeleton variant="text" width={150} height={40} />
+                  <div style={{width:"80px" ,height:"40px"}}></div>
                 ) : (
                   yearSelected
                 ),

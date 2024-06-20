@@ -18,6 +18,7 @@ export const getAllTeams = async (token,academicYear) => {
             throw error;
         });
         console.log(allTeams);
+        console.log(selectedBranchId);
     const teams = allTeams.filter(
       (team) => team.responsible.studiedBranchId === parseInt(selectedBranchId)
     );
