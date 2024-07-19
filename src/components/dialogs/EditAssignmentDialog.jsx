@@ -131,6 +131,9 @@ const EditAssignmentRow = ({ index, teams, projects, newAssignments,setNewAssign
   );
     const handleProjectChange = (newValue) => {
       console.log(newValue);
+      if (newValue === null) {
+        return;
+      }
       setNewAssignment((prev) => {
         const updatedAssignments = [...prev];
         updatedAssignments[index] = {

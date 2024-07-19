@@ -71,7 +71,14 @@ function Assignments({ mode }) {
             // team.responsible.profileImage = stringAvatar(team.responsible.firstName);
           }else{
             const url = await downLoadProfileImage(team.responsible.id, token);
-            setResponsiblesImages([...responsiblesImages, {id: team.responsible.id, url: url}]);
+           setResponsiblesImages((prev) => [
+              ...prev,
+              {
+                id: team.responsible.id,
+                name: team.responsible.firstName + " " + team.responsible.lastName,
+                url: url,
+              },
+            ]);
           }
         });
 
@@ -82,8 +89,14 @@ function Assignments({ mode }) {
               // member.profileImage = stringAvatar(member.firstName);
             }else{
               const url = await downLoadProfileImage(member.id, token);
-              setMembersImages([...membersImages, {id: member.id, url: url}]);
-            }
+              setMembersImages((prev) => [
+                ...prev,
+                {
+                  id: member.id,
+                  name: member.firstName + " " + member.lastName,
+                  url: url,
+                },
+              ]);            }
           });
         });
 
@@ -163,7 +176,7 @@ function Assignments({ mode }) {
           color="inherit"
         >
           <Avatar
-            src={responsiblesImages.find((image) => image.id === params.row.responsible.id)?.url}
+            src={responsiblesImages.find((responsible) => responsible.id === params.row.responsible.id)?.url}
             sx={{ height: "40px", width: "40px" }}
           />
         </IconButton>
@@ -254,12 +267,13 @@ function Assignments({ mode }) {
         >
           <BreadCrumb items={[
               { label: "Home", href: "/" },
+              { label: "Dashboard", href: "/" },
               { label: "Assignments", href: "/assignments" }
             ]} />
               {teamsWithoutPreferences.length === 0 &&
               Object.keys(assignment).length === 0 ? (
                 <Button
-                  variant="contained"
+                  variant="outlined"
                   onClick={handleMakeAssignment}
                 >
                   Make assignment

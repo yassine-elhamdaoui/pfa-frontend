@@ -18,6 +18,7 @@ export default function ConfirmationDialog({
   handleConfirmClick,
   setLoading,
   loading,
+  setRender,
 }) {
  
   const onConfirmDialogClose = () => {
@@ -27,6 +28,9 @@ export default function ConfirmationDialog({
   const onConfirmDialogConfirm = (id) => {
     setLoading(true);
     if (id==null) {
+      if (setRender) {
+        setRender((prev) => !prev);
+      }
     handleConfirmClick();
     } else {
       handleConfirmClick(id)
@@ -53,7 +57,7 @@ export default function ConfirmationDialog({
           loading={loading}
           sx={{marginLeft:"15px" , marginRight:"15px"}}
           loadingIndicator="Loading..."
-          variant="contained"
+          variant="outlined"
           onClick={()=>onConfirmDialogConfirm(id)}
           autoFocus
         >

@@ -41,7 +41,6 @@ const supervisorStuff = [
 ];
 const HOBStuff = [
   { id: 7, text: "Requests", icon: <PersonAddAlt1Icon />, path: "/dashboard/requests" },
-  { id: 8, text: "Teams", icon: <PeopleAltIcon />, path: "/dashboard/teams" },
   {
     id: 10,
     text: "Assignments",
@@ -57,8 +56,7 @@ const forAll = [
     icon: <AssignmentIcon />,
     path: "/dashboard/assignments/result",
   },
-  { id: 9, text: "Defenses", icon: <CoPresentIcon />, path: "/dashboard/defense" },
-  { id: 12, text: "Branch", icon: <SchoolIcon />, path: "/dashboard/branch" },
+  { id: 9, text: "Presentations", icon: <CoPresentIcon />, path: "/dashboard/presentations" },
   { id: 13, text: "Projects", icon: <FolderCopyIcon />, path: "/dashboard/projects" },
 ];
 // eslint-disable-next-line react/prop-types

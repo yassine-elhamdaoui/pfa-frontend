@@ -21,7 +21,7 @@ function DefenseSkeleton() {
           items={[
             { label: "Home", path: "/" },
             { label: "dashboard", path: "" },
-            { label: "Defense", path: "" },
+            { label: "Presentations", path: "" },
           ]}
         />
         <Skeleton variant="rectangular" width={100} height={40} />

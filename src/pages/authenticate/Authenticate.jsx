@@ -1,4 +1,3 @@
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { LoadingButton } from "@mui/lab";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
@@ -92,7 +91,10 @@ export default function Authenticate() {
           alignItems: "center",
         }}
       >
-        <Avatar src="/src/assets/auth_logo.png" sx={{ m: 1, bgcolor: "secondary.main" }} />
+        <Avatar
+          src="/src/assets/auth_logo.png"
+          sx={{ m: 1, bgcolor: "secondary.main" }}
+        />
         <Typography component="h1" variant="h5">
           Sign in
         </Typography>
@@ -133,14 +135,14 @@ export default function Authenticate() {
           </LoadingButton>
           <Grid container>
             <Grid item xs>
-              <Link href="#" variant="body2">
+              <Link href="/auth/reset-password" variant="body2">
                 Forgot password?
               </Link>
             </Grid>
             <Grid item>
-              <RouterLink to={"/auth/register"}>
-                Don't have an account? Sign Up
-              </RouterLink>
+              <Link href="/auth/register" variant="body2">
+                D'ont have an account? Sign Up
+              </Link>
             </Grid>
           </Grid>
         </Box>

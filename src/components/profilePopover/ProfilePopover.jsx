@@ -37,8 +37,8 @@ const ProfilePopover = ({ anchorEl, open, onClose,userData, profileImage ,setPro
           e.target.files[0],
           token
         );
-              const url = await downLoadProfileImage(userData.id, token);
-              setProfileImage(url);
+        const url = await downLoadProfileImage(userData.id, token);
+        setProfileImage(url);
       } catch (error) {
         console.error("Error uploading image", error);
       }

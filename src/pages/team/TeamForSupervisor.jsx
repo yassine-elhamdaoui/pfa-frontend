@@ -97,7 +97,22 @@ function TeamForSupervisor() {
         }
       }, [teamId]);
   return teamId === "undefined" || teamId === "null" ? (
-    <>no team for this project yet</>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        paddingTop: "100px",
+        alignItems: "center",
+      }}
+    >
+      <img src="/src/assets/team.png" height={200} width={200} />
+      <Typography variant="h5" color="textSecondary" textAlign="center">
+          No team found for this project
+      </Typography>
+      <Typography variant="body2" color="textSecondary" textAlign="center">
+          Wait until the a team is assigned to this project
+      </Typography>
+    </div>
   ) : loading ? (
     <TeamSkeleton />
   ) : Object.keys(team).length > 0 ? (

@@ -35,6 +35,7 @@ import Notifications from "../notification/Notifications";
 import { Search, SearchIconWrapper, StyledInputBase } from "./navBar";
 import ProfilePopover from "../profilePopover/ProfilePopover"; 
 import { downLoadProfileImage, getUserById } from "../../services/userService";
+import { forEach } from "lodash";
 
 
 // eslint-disable-next-line react/prop-types
@@ -53,6 +54,8 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = useState(null);
   const [profilePopoverOpen, setProfilePopoverOpen] = useState(false);//////usestate pour item profile
   const [profileAnchorEl, setProfileAnchorEl] = useState(null); ////////////anchore1 pour profil
+
+    const [sendersImages, setSendersImages] = useState([]);
 
   const [profileImage, setProfileImage] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -77,6 +80,20 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
         notifications.sort(
           (a, b) => new Date(b.creationDate) - new Date(a.creationDate)
         );
+
+              forEach(notifications, async (not) => {
+                const url = await downLoadProfileImage(not.idOfSender, token);
+              
+                if (sendersImages.find((sender) => sender.id === not.idOfSender) === undefined){
+                    setSendersImages((prev) => [
+                      ...prev,
+                      {
+                        id: not.idOfSender,
+                        url: url,
+                      },
+                    ]);
+                }
+              });
         const url = await downLoadProfileImage(user.id, token);
         setProfileImage(url);
 
@@ -101,10 +118,10 @@ export default function NavBar({ handleDrawerOpen, setMode }) {
     fetchNotifications();
 
     // Set up polling to fetch notifications every 1 minute
-    // const interval = setInterval(fetchNotifications, 60000);
+    const interval = setInterval(fetchNotifications, 60000);
 
     // Clean up interval on component unmount
-    // return () => clearInterval(interval);
+    return () => clearInterval(interval);
   }, []);
 
   const calculateElapsedTime = (diffInMinutes) => {
@@ -243,10 +260,9 @@ const handleDeleteNotification = async (notificationId, notificationType) => {
       open={isMenuOpen}
       onClose={handleMenuClose}
     >
-      <MenuItem onClick={handleProfileClick}>Profile</MenuItem>
-      <MenuItem onClick={handleMenuClose}>My account</MenuItem>
+      <MenuItem onClick={handleProfileClick} sx={{padding:"5px 20px"}}>Profile</MenuItem>
       {window.screen.width >= 900 ? (
-        <MenuItem onClick={(event) => setAnchorEl2(event.currentTarget)}>
+        <MenuItem onClick={(event) => setAnchorEl2(event.currentTarget)} sx={{padding:"5px 20px"}}>
           Theme
         </MenuItem>
       ) : null}
@@ -290,14 +306,6 @@ const handleDeleteNotification = async (notificationId, notificationType) => {
       open={isMobileMenuOpen}
       onClose={handleMobileMenuClose}
     >
-      <MenuItem>
-        <IconButton size="large" aria-label="show 4 new mails" color="inherit">
-          <Badge badgeContent={2} color="error">
-            <MailIcon />
-          </Badge>
-        </IconButton>
-        <p>Messages</p>
-      </MenuItem>
       <MenuItem 
         onClick={(event) => (setMobileMoreAnchorEl(null),setNotificationAnchorEl(event.currentTarget))}
       >
@@ -446,15 +454,6 @@ const handleDeleteNotification = async (notificationId, notificationType) => {
           <Box
             sx={{ display: { xs: "none", md: "flex" }, alignItems: "center" }}
           >
-            <IconButton
-              size="large"
-              aria-label="show 4 new mails"
-              color="inherit"
-            >
-              <Badge badgeContent={2} color="error">
-                <MailIcon />
-              </Badge>
-            </IconButton>
 
             <IconButton
               size="large"
@@ -476,8 +475,21 @@ const handleDeleteNotification = async (notificationId, notificationType) => {
               handleDeleteNotification={handleDeleteNotification}
               mode={mode}
               teamNotifications={teamNotifications}
+              sendersImages={sendersImages}
             />
 
+
+            <Box sx={{
+              display:"flex",
+              alignItems:"center",
+              padding: "0 10px",
+              borderRadius: "50px",
+              border: `1px solid ${mode === "light" ? "#333" : "#ccc"}`,
+              height: "40px",
+            }}>
+            <Typography variant="body2">
+              {userData.firstName} {userData.lastName}
+            </Typography>
             <IconButton
               size="large"
               edge="end"
@@ -487,7 +499,7 @@ const handleDeleteNotification = async (notificationId, notificationType) => {
               onClick={handleProfileMenuOpen}
               color="inherit"
             >
-              {localStorage.getItem("name") ? (
+              {localStorage.getItem("token") ? (
                 // <Avatar {...stringAvatar(localStorage.getItem("name"))} />
                 <Avatar
                   alt="Profile"
@@ -498,6 +510,7 @@ const handleDeleteNotification = async (notificationId, notificationType) => {
                 <AccountCircle />
               )}
             </IconButton>
+            </Box>
           </Box>
           <Box sx={{ display: { xs: "flex", md: "none" } }}>
             <IconButton

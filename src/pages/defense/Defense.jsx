@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/prop-types */
 import {
   Day,
@@ -31,6 +32,7 @@ function Defense() {
   const [teams, setTeams] = useState([]);
   const [loading,setLoading] = useState(false); 
   const [render , setRender] = useState(false);
+
 
   const [confirmationOpenDialog, setConfirmationOpenDialog] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
@@ -258,7 +260,7 @@ console.log(presentationsPlan);
                 items={[
                   { label: "Home", path: "/" },
                   { label: "dashboard", path: "" },
-                  { label: "Defense", path: "" },
+                  { label: "Presentations", path: "" },
                 ]}
               />
               
@@ -270,7 +272,7 @@ console.log(presentationsPlan);
               allowDragAndDrop={true}
               height="calc(100vh - 140px)"
               style={{ borderRadius: "5px" }}
-              readonly={isStudent ? true : false}
+              readonly={isStudent || isSupervisor ? true : false}
               dragStop={(args) => {
                 console.log("dragStop", args);
                 const data = args.data;
@@ -320,7 +322,7 @@ console.log(presentationsPlan);
                 items={[
                   { label: "Home", path: "/" },
                   { label: "dashboard", path: "" },
-                  { label: "Defense", path: "" },
+                  { label: "Presentations", path: "" },
                 ]}
               />
             </div>
@@ -368,7 +370,7 @@ console.log(presentationsPlan);
                 items={[
                   { label: "Home", path: "/" },
                   { label: "dashboard", path: "" },
-                  { label: "Defense", path: "" },
+                  { label: "Presentations", path: "" },
                 ]}
               />
               {isHOB && presentationsPlan &&
@@ -388,7 +390,7 @@ console.log(presentationsPlan);
               allowDragAndDrop={true}
               height="calc(100vh - 140px)"
               style={{ borderRadius: "5px" }}
-              readonly={isStudent ? true : false}
+              readonly={isStudent || isSupervisor? true : false}
               dragStop={(args) => {
                 console.log("dragStop", args);
                 const data = args.data;
@@ -422,6 +424,7 @@ console.log(presentationsPlan);
               handleConfirmClick={() => validatePresentationsPlan(token)}
               setLoading={setConfirmLoading}
               loading={confirmLoading}
+              setRender={setRender}
             />
           </div>
         );
@@ -448,7 +451,7 @@ console.log(presentationsPlan);
               items={[
                 { label: "Home", path: "/" },
                 { label: "dashboard", path: "" },
-                { label: "Defense", path: "" },
+                { label: "Presentations", path: "" },
               ]}
             />
           </div>
@@ -495,7 +498,7 @@ console.log(presentationsPlan);
               items={[
                 { label: "Home", path: "/" },
                 { label: "dashboard", path: "" },
-                { label: "Defense", path: "" },
+                { label: "Presentations", path: "" },
               ]}
             />
           </div>

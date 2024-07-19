@@ -42,9 +42,8 @@ import { getUserStories } from "../../services/backlog";
 import { Link, useSearchParams } from "react-router-dom";
 import { downLoadProfileImage, getUserById } from "../../services/userService";
 import { forEach, set } from "lodash";
+import { getSprints } from "../../services/backLogService";
 
-import { useState } from "react";
-import { Reorder } from "framer-motion";
 function Board() {
   const mode = localStorage.getItem("mode");
   const [params] = useSearchParams();
@@ -94,35 +93,29 @@ function Board() {
           setMembersImages(membersStuff);
           setProject(fetchedTeam.project);
           console.log(fetchedTeam.project);
-          const fetchedUserStories = await getUserStories(
-            fetchedTeam.project.backlogId,
+          const fetchedSprints = await getSprints(
+            fetchedTeam.project.id,
             token
           );
-          setUserStories(fetchedUserStories);
+          forEach(fetchedSprints, async (sprint) => {
+            if (sprint.started && !sprint.closed) {
+              setUserStories(sprint.userStories);
+              console.log(userStories);
+            }
+          });
         }else{
           teamId = fetchedUser.teamId;
           if (teamId !== null) {
             console.log(teamId );
             const fetchedTeam = await getTeamById(teamId , token);
-            console.log(fetchedTeam);
-            setTeam(fetchedTeam);
-            setProject(fetchedTeam.project);
-            console.log(fetchedTeam.project);
-            const fetchedUserStories = await getUserStories(
-              fetchedTeam.project.backlogId,
-              token
-            );
-            console.log(userStories);
-            setUserStories(fetchedUserStories);
-
-
-            forEach(team.members, async (member) => {
+            forEach(fetchedTeam.members, async (member) => {
               console.log(member.firstName);
               const url = await downLoadProfileImage(
                 member.id,
                 token
               );
               console.log(member.firstName);
+              
               setMembersImages((prev) => [
                 ...prev,
                 {
@@ -132,10 +125,21 @@ function Board() {
                 },
               ]);
             });
+            console.log(fetchedTeam);
+            setTeam(fetchedTeam);
+            setProject(fetchedTeam.project);
+            console.log(fetchedTeam.project);
+            const fetchedSprints = await getSprints(
+              fetchedTeam.project.id,
+              token
+            );
+            forEach(fetchedSprints, async (sprint) => {
+              if (sprint.started && !sprint.closed) {
+                setUserStories(sprint.userStories);
+                console.log(userStories);
+              }
+            });
 
-
-
-            
             setLoading(false);
           } else {
             throw new Error("User is not in a team");
@@ -218,8 +222,18 @@ function Board() {
       style={{ display: "flex", flexDirection: "column", gap: "20px" }}
     >
       {!loading ? (
-        team && Object.keys(team).length > 0 ? (
-          project && Object.keys(project).length > 0 ? (
+        (team && Object.keys(team).length > 0) ||
+        (user &&
+          Object.keys(user).length > 0 &&
+          user.authorities.find(
+            (auth) => auth.authority === "ROLE_SUPERVISOR"
+          ) !== undefined) ? (
+          (project && Object.keys(project).length > 0) ||
+          (user &&
+            Object.keys(user).length > 0 &&
+            user.authorities.find(
+              (auth) => auth.authority === "ROLE_SUPERVISOR"
+            ) !== undefined) ? (
             userStories && userStories.length > 0 ? (
               <>
                 <Box
@@ -229,7 +243,7 @@ function Board() {
                     alignItems: "center",
                     gap: "15px",
                     justifyContent: "space-between",
-                    flexWrap:"wrap"
+                    flexWrap: "wrap",
                   }}
                 >
                   <BreadCrumb
@@ -322,45 +336,53 @@ function Board() {
                 </KanbanComponent>
               </>
             ) : (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  paddingTop: "60px",
-                  alignItems: "center",
-                }}
-              >
-                <img src="/src/assets/agile.png" height={200} width={200} />
-                <Typography
-                  variant="h5"
-                  color="textSecondary"
-                  textAlign="center"
+              <div>
+                <BreadCrumb
+                  items={[
+                    { label: "Home", url: "/" },
+                    { label: "Board", url: "/board" },
+                  ]}
+                />
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    paddingTop: "60px",
+                    alignItems: "center",
+                  }}
                 >
-                  {Object.keys(user).length > 0 &&
-                  user.authorities.find(
-                    (auth) => auth.authority === "ROLE_SUPERVISOR"
-                  ) !== undefined
-                    ? "No user stories found"
-                    : "Get started in the backlog"}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  color="textSecondary"
-                  textAlign="center"
-                >
-                  {Object.keys(user).length > 0 &&
-                  user.authorities.find(
-                    (auth) => auth.authority === "ROLE_SUPERVISOR"
-                  ) !== undefined ? (
-                    "Wait for the team to add some user stories and start the sprint"
-                  ) : (
-                    <>
-                      Plan and start the sprint in the{" "}
-                      <Link to="/project/backlog">Backlog</Link> then come back
-                      here
-                    </>
-                  )}
-                </Typography>
+                  <img src="/src/assets/agile.png" height={200} width={200} />
+                  <Typography
+                    variant="h5"
+                    color="textSecondary"
+                    textAlign="center"
+                  >
+                    {Object.keys(user).length > 0 &&
+                    user.authorities.find(
+                      (auth) => auth.authority === "ROLE_SUPERVISOR"
+                    ) !== undefined
+                      ? "No user stories found"
+                      : "Get started in the backlog"}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="textSecondary"
+                    textAlign="center"
+                  >
+                    {Object.keys(user).length > 0 &&
+                    user.authorities.find(
+                      (auth) => auth.authority === "ROLE_SUPERVISOR"
+                    ) !== undefined ? (
+                      "Wait for the team to add some user stories and start the sprint"
+                    ) : (
+                      <>
+                        Plan and start the sprint in the{" "}
+                        <Link to="/dashboard/project/backlog">Backlog</Link>{" "}
+                        then come back here
+                      </>
+                    )}
+                  </Typography>
+                </div>
               </div>
             )
           ) : (

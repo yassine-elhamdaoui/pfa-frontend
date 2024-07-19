@@ -11,12 +11,13 @@ import BreadCrumb from "../../components/breadCrumb/BreadCrumb";
 import { downloadFile } from "../../services/documentService";
 import { getProjectById } from "../../services/projectService";
 import { getTeamById } from "../../services/teamService";
-import { getUserById } from "../../services/userService";
+import { downLoadProfileImage, getUserById } from "../../services/userService";
 import { stringAvatar, stringToColor } from "../../utils/generalUtils";
 import { hasRole } from "../../utils/userUtiles";
 import ProjectDetailsSkeleton from "./ProjectDetailsSkeleton";
 import Groups2Icon from "@mui/icons-material/Groups2";
 import EditProjectDialog from '../../components/dialogs/EditProjectDialog';
+import { forEach } from 'lodash';
 
 
 
@@ -28,6 +29,7 @@ function ProjectDetails() {
   const userId = localStorage.getItem("userId");
   const mode = localStorage.getItem("mode")
   const [project, setProject] = useState({});
+  const [render,setRender] = useState(false);
   const [user , setUser] = useState({});
   const [loading, setLoading] = useState(true);
   const [supervisors, setSupervisors] = useState([]);
@@ -35,6 +37,9 @@ function ProjectDetails() {
   const [projectTeam, setProjectTeam] = useState({});
   const [documents, setDocuments] = useState([]);
   const [report, setReport] = useState(null); 
+
+  const [supervisorsImages , setSupervisorsImages] = useState([]);
+  const [membersImages , setMembersImages] = useState([]);
   const [editProjectDialogOpen, setEditProjectDialogOpen] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -57,26 +62,66 @@ function ProjectDetails() {
         if (fetchedUser.teamId !== null) {
           fetchedTeam = await getTeamById(fetchedUser.teamId, token);
         }
-        setUser(fetchedUser);
         const fetchedProject = await getProjectById(id, token);
-        console.log(fetchedProject);
-        setProject(fetchedProject);
-      
-
         const supervisorPromises = fetchedProject.supervisorIds.map((supervisorId) =>
-        getUserById(supervisorId, token)
+          getUserById(supervisorId, token)
         );
         const fetchedSupervisors = await Promise.all(supervisorPromises);
+                forEach(fetchedSupervisors, async (supervisor) => {
+                  const response = await downLoadProfileImage(
+                    supervisor.id,
+                    token
+                  );
+                  setSupervisorsImages((prev) => [
+                    ...prev,
+                    {
+                      id: supervisor.id,
+                      name: supervisor.firstName + " " + supervisor.lastName,
+                      url: response,
+                    },
+                  ]);
+                });
         console.log(fetchedSupervisors);
         setSupervisors(fetchedSupervisors);
+        console.log(fetchedProject);
+        setProject(fetchedProject);
+        setUser(fetchedUser);
+        
+
           console.log(fetchedTeam);
           setTeam(fetchedTeam);
-          const fetchedProjectTeam = await getTeamById(fetchedProject.teamId, token);
-          setProjectTeam(fetchedProjectTeam);
-          console.error("Team is null for the project:", fetchedProject);
+          
+          if (fetchedProject.teamId !== null) {
+            
+            const fetchedProjectTeam = await getTeamById(fetchedProject.teamId, token);
+            if (fetchedProjectTeam !== null) {
+              forEach(fetchedProjectTeam.members, async (member) => {
+                const response = await downLoadProfileImage(
+                  member.id,
+                  token
+                );
+                setMembersImages((prev) => [
+                  ...prev,
+                  {
+                    id: member.id,
+                    name:
+                      member.firstName +
+                      " " +
+                      member.lastName,
+                    url: response,
+                  },
+                ]);
+              });
+            }
+            setProjectTeam(fetchedProjectTeam);
+          }
     
+          console.log(fetchedProject.status === "old");
+
         // Récupération des documents du projet s'il est ancien
         if (fetchedProject.status === "old") {
+
+          console.log("in here");
           setDocuments(fetchedProject.folders.filter((folder) => folder.type === "DOCUMENTS")[0].documents);
           setReport(fetchedProject.folders.filter((folder) => folder.type === "REPORT")[0].documents[0]);
         }
@@ -89,9 +134,10 @@ function ProjectDetails() {
     };
 
     fetchData();
-  }, [id, token]);
+  }, [id, token,render]);
+  console.log(project);
   console.log(documents);
-  console.log(projectTeam);
+  console.log(report);
   if (loading) {
     return <ProjectDetailsSkeleton />;
   }
@@ -112,9 +158,18 @@ function ProjectDetails() {
       project.supervisorIds.some((id) => (id === parseInt(userId)))) ||
       hasRole("ROLE_HEAD_OF_BRANCH") ||
       (hasRole("ROLE_STUDENT") && isTeamMember));
+      
+    console.log(projectTeam);
+    console.log(canViewDocuments)
+    console.log(
+      hasRole("ROLE_SUPERVISOR") &&
+        project.supervisorIds.some((id) => id === parseInt(userId))
+    );
+    console.log(hasRole("ROLE_HEAD_OF_BRANCH"));
+    console.log(hasRole("ROLE_STUDENT") && isTeamMember);
 
 
-  const hasReport = report !== null;
+  const hasReport = report !== null && report !== undefined;
 
   const hasDocuments = documents && documents.length > 0;
   return (
@@ -241,9 +296,12 @@ function ProjectDetails() {
               }}
             >
               <BreadCrumb items={[{ label: "Documents", link: "#" }]} />
+              {
+                console.log(report)
+              }
               <DataGrid
                 rows={
-                  canViewDocuments && hasDocuments
+                  canViewDocuments && hasDocuments && hasReport
                     ? [report, ...documents]
                     : [report]
                 }
@@ -342,18 +400,12 @@ function ProjectDetails() {
                   sx={{ padding: "10px" }}
                   avatar={
                     <Avatar
-                      sx={{
-                        bgcolor: stringToColor(
-                          `${supervisor.firstName} ${supervisor.lastName}`
-                        ),
-                      }}
-                    >
-                      {
-                        stringAvatar(
-                          `${supervisor.firstName} ${supervisor.lastName}`
-                        ).children
-                      }
-                    </Avatar>
+                      src={supervisorsImages.find(
+                        (img) => img.id === supervisor.id
+                      )?.url}
+                      height={50}
+                      width={50}
+                    />
                   }
                   title={`${supervisor.firstName} ${supervisor.lastName}`}
                   subheader={supervisor.email}
@@ -361,7 +413,7 @@ function ProjectDetails() {
               </Card>
             ))}
             <BreadCrumb items={[{ label: "Team", link: "#" }]} />
-            {Object.keys(projectTeam).length > 0 ? (
+            {projectTeam && Object.keys(projectTeam).length > 0 ? (
               <Card
                 sx={{
                   display: "flex",
@@ -379,9 +431,9 @@ function ProjectDetails() {
                   {projectTeam.members.map((member) => (
                     <Avatar
                       key={member.id}
-                      {...stringAvatar(
-                        `${member.firstName} ${member.lastName}`
-                      )}
+                      src={membersImages.find((img) => img.id === member.id)?.url}
+                      height={45}
+                      width={45}
                     />
                   ))}
                 </AvatarGroup>
@@ -444,6 +496,7 @@ function ProjectDetails() {
           setSnackbarOpen={setSnackbarOpen}
           setSnackbarMessage={setSnackbarMessage}
           project={project}
+          setRender={setRender}
         />
     </div>
   );

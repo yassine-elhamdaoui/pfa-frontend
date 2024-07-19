@@ -47,7 +47,8 @@ function EditProjectDialog({
     handleModalClose,
     setSnackbarOpen,
     setSnackbarMessage,
-    project
+    project,
+    setRender
 }) {
     const [techOptions, setTechOptions] = useState([
       {
@@ -256,6 +257,7 @@ function EditProjectDialog({
 
         setLoading(false);
         await updateProject(token,project.id, data, setSnackbarOpen, setSnackbarMessage);
+        setRender((prev) => !prev);
         handleModalClose();
       };
   return (
@@ -281,7 +283,7 @@ function EditProjectDialog({
             justifyContent: "space-between",
           }}
         >
-          <Typography variant="h6">Create Project</Typography>
+          <Typography variant="h6">Edit Project</Typography>
           <CloseIcon style={{ cursor: "pointer" }} onClick={handleModalClose} />
         </div>
       </DialogTitle>
@@ -289,7 +291,7 @@ function EditProjectDialog({
         id="alert-dialog-slide-description"
         sx={{ marginLeft: "25px" }}
       >
-        Fill in the details to create a new project
+        Fill in the details to edit a new project
       </DialogContentText>
       <StyledDialogContent>
         <Grid container spacing={2}>

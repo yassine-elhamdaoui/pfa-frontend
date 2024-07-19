@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Avatar from "@mui/material/Avatar";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
@@ -11,6 +11,8 @@ import MenuItem from "@mui/material/MenuItem";
 import { styled } from "@mui/material/styles";
 import { useMediaQuery } from "@mui/material";
 import { stringAvatar } from "../../utils/generalUtils";
+import { forEach } from "lodash";
+import { downLoadProfileImage } from "../../services/userService";
 
 const JoinRequestContainer = styled(Paper)(({ theme }) => ({
   width: "100%", // Default width for small screens
@@ -42,11 +44,20 @@ const ButtonGroup = styled("div")(({ theme }) => ({
   gap: theme.spacing(2),
 }));
 
+
 // eslint-disable-next-line react/prop-types
-function JoinRequest({ request, setOpenDialog, setIsAcceptConfirmation ,setSelectedUser}) {
+function JoinRequest({ request, setOpenDialog, setIsAcceptConfirmation ,setSelectedUser,setRender}) {
+  const token = localStorage.getItem("token");
   const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("sm"));
   const [anchorEl, setAnchorEl] = useState(null);
-
+  const [image, setImage] = useState([]);
+  useEffect(() => {
+    async function fetchImages() {
+      const images = await downLoadProfileImage(request.user.id,token);
+      setImage(images);
+    }
+    fetchImages();
+  }, [request]);
   const handleMoreMenuClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -67,9 +78,12 @@ function JoinRequest({ request, setOpenDialog, setIsAcceptConfirmation ,setSelec
       >
         <UserInfoContainer>
           <Avatar
-            {...stringAvatar(
-              request.user.firstName + " " + request.user.lastName
-            )}
+            // {...stringAvatar(
+            //   request.user.firstName + " " + request.user.lastName
+            // )}
+            src={image && image}
+            height={45}
+            width={45}
           />
           <div>
             <Typography variant="h6">{`${request.user.firstName} ${request.user.lastName}`}</Typography>
@@ -109,13 +123,30 @@ function JoinRequest({ request, setOpenDialog, setIsAcceptConfirmation ,setSelec
           </div>
         ) : (
           <ButtonGroup>
-            <Button size="medium" color="primary" disableElevation onClick={()=>(setSelectedUser(request.id),setOpenDialog(true),setIsAcceptConfirmation(true))}>
+            <Button
+              size="medium"
+              color="primary"
+              disableElevation
+              onClick={() => (
+                setSelectedUser(request.id),
+                setOpenDialog(true),
+                setIsAcceptConfirmation(true),
+                setRender((prev) => !prev)
+              )}
+            >
               Accept
             </Button>
-            <Button size="medium" color="error" disableElevation
+            <Button
+              size="medium"
+              color="error"
+              disableElevation
               onClick={() => (
-                setSelectedUser(request.id),setOpenDialog(true), setIsAcceptConfirmation(false)
-              )}>
+                setSelectedUser(request.id),
+                setOpenDialog(true),
+                setIsAcceptConfirmation(false),
+                setRender((prev) => !prev)
+              )}
+            >
               Reject
             </Button>
           </ButtonGroup>

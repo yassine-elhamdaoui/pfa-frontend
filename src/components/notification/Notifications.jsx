@@ -25,13 +25,14 @@ function Notifications({
   elapsedTime,
   mode,
   teamNotifications,
+  sendersImages
 }) {
   const [value, setValue] = useState("1");
   const isSupervisor = hasRole("ROLE_SUPERVISOR");
   const isStudent =  hasRole("ROLE_STUDENT")
   const isHOB = hasRole("ROLE_HEAD_OF_BRANCH")
   
-
+console.log(sendersImages);
   const handleNotsViewChange = (event, newValue) => {
     setValue(newValue);
   };
@@ -108,7 +109,7 @@ function Notifications({
             >
               <Tab label="General" value="1" />
               {isStudent && <Tab label="Team" value="2" />}
-              {(isSupervisor || isStudent)&& <Tab label="Project" value="3" />}
+              {(isSupervisor || isStudent) && <Tab label="Project" value="3" />}
             </TabList>
           </Box>
           <TabPanel value="1" sx={{ padding: "48px 0 0 0" }}>
@@ -135,9 +136,17 @@ function Notifications({
                     }}
                   >
                     <div style={{ margin: "10px 0 0 0" }}>
+                      {console.log(notification.idOfSender)}
                       <Avatar
                         variant="square"
-                        {...stringAvatar(notification.nameOfSender, 35, 20, 7)}
+                        src={
+                          sendersImages.find(
+                            (sender) => sender.id === notification.idOfSender
+                          )?.url
+                        }
+                        height={35}
+                        width={35}
+                        sx={{ borderRadius: "10px" }}
                       />
                     </div>
 
@@ -200,209 +209,215 @@ function Notifications({
               </div>
             )}
           </TabPanel>
-            {isStudent && (
-              <TabPanel value="2" sx={{ padding: "48px 0 0 0" }}>
-                {teamNotifications && teamNotifications.length > 0 ? (
-                  teamNotifications.map((teamNotification) => (
+          {isStudent && (
+            <TabPanel value="2" sx={{ padding: "48px 0 0 0" }}>
+              {teamNotifications && teamNotifications.length > 0 ? (
+                teamNotifications.map((teamNotification) => (
+                  <Box
+                    key={teamNotification.id}
+                    sx={{
+                      display: "flex",
+                      padding: "8px",
+                      alignItems: "center",
+                      borderBottom: `1px solid ${
+                        mode === "dark" ? "#e0e0e070" : "#e0e0e0"
+                      }`,
+                    }}
+                  >
                     <Box
-                      key={teamNotification.id}
                       sx={{
                         display: "flex",
-                        padding: "8px",
-                        alignItems: "center",
-                        borderBottom: `1px solid ${
-                          mode === "dark" ? "#e0e0e070" : "#e0e0e0"
-                        }`,
+                        gap: "8px",
+                        width: "100%",
+                        alignItems: "start",
+                        minHeight: "70px",
                       }}
                     >
+                      <div style={{ margin: "10px 0 0 0" }}>
+                        <Avatar
+                          variant="square"
+                          src={
+                            sendersImages.find(
+                              (sender) =>
+                                sender.id === teamNotification.idOfSender
+                            )?.url
+                          }
+                          height={35}
+                          width={35}
+                          sx={{ borderRadius: "10px" }}
+                        />
+                      </div>
+
                       <Box
                         sx={{
                           display: "flex",
-                          gap: "8px",
+                          flexDirection: "column",
+                          justifyContent: "space-between",
                           width: "100%",
-                          alignItems: "start",
-                          minHeight: "70px",
+                          Height: "inherit",
+                          minHeight: "inherit",
                         }}
                       >
-                        <div style={{ margin: "10px 0 0 0" }}>
-                          <Avatar
-                            variant="square"
-                            {...stringAvatar(
-                              teamNotification.nameOfSender,
-                              35,
-                              20,
-                              7
-                            )}
-                          />
-                        </div>
-
-                        <Box
+                        <Typography
+                          variant="body2"
+                          color="textSecondary"
+                          sx={{ fontSize: "13px" }}
+                        >
+                          {teamNotification.description}
+                        </Typography>
+                        <Typography
+                          color="textSecondary"
                           sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "space-between",
-                            width: "100%",
-                            Height: "inherit",
-                            minHeight: "inherit",
+                            textAlign: "end",
+                            fontSize: "10px",
                           }}
                         >
-                          <Typography
-                            variant="body2"
-                            color="textSecondary"
-                            sx={{ fontSize: "13px" }}
-                          >
-                            {teamNotification.description}
-                          </Typography>
-                          <Typography
-                            color="textSecondary"
-                            sx={{
-                              textAlign: "end",
-                              fontSize: "10px",
-                            }}
-                          >
-                            {elapsedTime[teamNotification.id]}
-                          </Typography>
-                        </Box>
+                          {elapsedTime[teamNotification.id]}
+                        </Typography>
                       </Box>
-                      <IconButton
-                        onClick={() =>
-                          handleDeleteNotification(
-                            teamNotification.id,
-                            teamNotification.type
-                          )
-                        }
-                      >
-                        <DeleteOutline />
-                      </IconButton>
                     </Box>
-                  ))
-                ) : (
-                  <div
-                    style={{
+                    <IconButton
+                      onClick={() =>
+                        handleDeleteNotification(
+                          teamNotification.id,
+                          teamNotification.type
+                        )
+                      }
+                    >
+                      <DeleteOutline />
+                    </IconButton>
+                  </Box>
+                ))
+              ) : (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    paddingTop: "50px",
+                  }}
+                >
+                  <img
+                    src="/src/assets/notification.png"
+                    height={150}
+                    width={150}
+                  />
+                  <Typography
+                    variant="body1"
+                    color="textSecondary"
+                    alignText="center"
+                  >
+                    No team notifications to show
+                  </Typography>
+                </div>
+              )}
+            </TabPanel>
+          )}
+          {(isStudent || isSupervisor) && (
+            <TabPanel value="3" sx={{ padding: "48px 0 0 0" }}>
+              {teamNotifications && teamNotifications.length > 0 ? (
+                teamNotifications.map((teamNotification) => (
+                  <Box
+                    key={teamNotification.id}
+                    sx={{
                       display: "flex",
-                      flexDirection: "column",
+                      padding: "8px",
                       alignItems: "center",
-                      paddingTop: "50px",
+                      borderBottom: `1px solid ${
+                        mode === "dark" ? "#e0e0e070" : "#e0e0e0"
+                      }`,
                     }}
                   >
-                    <img
-                      src="/src/assets/notification.png"
-                      height={150}
-                      width={150}
-                    />
-                    <Typography
-                      variant="body1"
-                      color="textSecondary"
-                      alignText="center"
-                    >
-                      No team notifications to show
-                    </Typography>
-                  </div>
-                )}
-              </TabPanel>
-            )}
-            {(isStudent || isSupervisor)&& (
-              <TabPanel value="3" sx={{padding:"48px 0 0 0"}}>
-                {teamNotifications && teamNotifications.length > 0 ? (
-                  teamNotifications.map((teamNotification) => (
                     <Box
-                      key={teamNotification.id}
                       sx={{
                         display: "flex",
-                        padding: "8px",
-                        alignItems: "center",
-                        borderBottom: `1px solid ${
-                          mode === "dark" ? "#e0e0e070" : "#e0e0e0"
-                        }`,
+                        gap: "8px",
+                        width: "100%",
+                        alignItems: "start",
+                        minHeight: "70px",
                       }}
                     >
+                      <div style={{ margin: "10px 0 0 0" }}>
+                        <Avatar
+                          variant="square"
+                          src={
+                            sendersImages.find(
+                              (sender) =>
+                                sender.id === teamNotification.idOfSender
+                            )?.url
+                          }
+                          height={35}
+                          width={35}
+                          sx={{ borderRadius: "10px" }}
+                        />
+                      </div>
+
                       <Box
                         sx={{
                           display: "flex",
-                          gap: "8px",
+                          flexDirection: "column",
+                          justifyContent: "space-between",
                           width: "100%",
-                          alignItems: "start",
-                          minHeight: "70px",
+                          Height: "inherit",
+                          minHeight: "inherit",
                         }}
                       >
-                        <div style={{ margin: "10px 0 0 0" }}>
-                          <Avatar
-                            variant="square"
-                            {...stringAvatar(
-                              teamNotification.nameOfSender,
-                              35,
-                              20,
-                              7
-                            )}
-                          />
-                        </div>
-
-                        <Box
+                        <Typography
+                          variant="body2"
+                          color="textSecondary"
+                          sx={{ fontSize: "13px" }}
+                        >
+                          {teamNotification.description}
+                        </Typography>
+                        <Typography
+                          color="textSecondary"
                           sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "space-between",
-                            width: "100%",
-                            Height: "inherit",
-                            minHeight: "inherit",
+                            textAlign: "end",
+                            fontSize: "10px",
                           }}
                         >
-                          <Typography
-                            variant="body2"
-                            color="textSecondary"
-                            sx={{ fontSize: "13px" }}
-                          >
-                            {teamNotification.description}
-                          </Typography>
-                          <Typography
-                            color="textSecondary"
-                            sx={{
-                              textAlign: "end",
-                              fontSize: "10px",
-                            }}
-                          >
-                            {elapsedTime[teamNotification.id]}
-                          </Typography>
-                        </Box>
+                          {elapsedTime[teamNotification.id]}
+                        </Typography>
                       </Box>
-                      <IconButton
-                        onClick={() =>
-                          handleDeleteNotification(
-                            teamNotification.id,
-                            teamNotification.type
-                          )
-                        }
-                      >
-                        <DeleteOutline />
-                      </IconButton>
                     </Box>
-                  ))
-                ) : (
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      paddingTop: "50px",
-                    }}
-                  >
-                    <img
-                      src="/src/assets/notification.png"
-                      height={150}
-                      width={150}
-                    />
-                    <Typography
-                      variant="body1"
-                      color="textSecondary"
-                      alignText="center"
+                    <IconButton
+                      onClick={() =>
+                        handleDeleteNotification(
+                          teamNotification.id,
+                          teamNotification.type
+                        )
+                      }
                     >
-                      No project notifications to show
-                    </Typography>
-                  </div>
-                )}
-              </TabPanel>
-            )}
-            {isSupervisor}
+                      <DeleteOutline />
+                    </IconButton>
+                  </Box>
+                ))
+              ) : (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    paddingTop: "50px",
+                  }}
+                >
+                  <img
+                    src="/src/assets/notification.png"
+                    height={150}
+                    width={150}
+                  />
+                  <Typography
+                    variant="body1"
+                    color="textSecondary"
+                    alignText="center"
+                  >
+                    No project notifications to show
+                  </Typography>
+                </div>
+              )}
+            </TabPanel>
+          )}
+          {isSupervisor}
         </TabContext>
       </Box>
     </Popover>

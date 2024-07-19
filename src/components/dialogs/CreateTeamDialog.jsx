@@ -10,13 +10,14 @@ import Autocomplete from "@mui/material/Autocomplete";
 import Chip from "@mui/material/Chip";
 import * as React from "react";
 import { useEffect } from "react";
-import { getUsers } from "../../services/userService"; // Import de la fonction getUsers depuis le fichier usersservice
+import { downLoadProfileImage, getStudents, getUsers } from "../../services/userService"; // Import de la fonction getUsers depuis le fichier usersservice
 import { createTeam } from "../../services/teamService"; // Import de la fonction createTeam depuis le fichier teamService'
 import { useState } from "react";
 import Avatar from "@mui/material/Avatar";
 import CloseIcon from "@mui/icons-material/Close";
 import { stringAvatar } from "../../utils/generalUtils";
 import { getAcademicYear } from "../../services/projectService";
+import { forEach } from "lodash";
 
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="down" ref={ref} {...props} />;
@@ -26,6 +27,7 @@ const Transition = forwardRef(function Transition(props, ref) {
 function CreateTeamDialog({ teamDialogOpen, handleModalClose ,setSnackbarOpen, setSnackbarMessage}) {
   const [users, setUsers] = React.useState([]); // État pour stocker la liste des utilisateurs
   const [selectedUsers, setSelectedUsers] = useState([]);
+  const [membersImages, setMembersImages] = useState([]);
 
   const handleAutocompleteChange = (event, newValue) => {
     setSelectedUsers(newValue);
@@ -40,23 +42,34 @@ function CreateTeamDialog({ teamDialogOpen, handleModalClose ,setSnackbarOpen, s
           return;
         }
         // Utilisation de la fonction getUsers pour récupérer les utilisateurs
-        const usersData = await getUsers(token);
+        const students = await getStudents(token);
         // Filtrer les utilisateurs pour ne conserver que ceux qui ne sont dans aucune équipe
-        const usersWithoutTeamAndStudentRole = usersData.filter(
+        const studentsWithoutTeam = students.filter(
           (user) =>
             user.email !== localStorage.getItem("email") &&
-            !user.teamId &&
-            user.authorities.some(
-              (authority) => authority.authority === "ROLE_STUDENT"
-            )
+            !user.teamId
         );
+        forEach(studentsWithoutTeam, async (member) => {
+          console.log(member.firstName);
+          const url = await downLoadProfileImage(member.id, token);
+          console.log(member.firstName);
+          setMembersImages((prev) => [
+            ...prev,
+            {
+              id: member.id,
+              name: member.firstName + " " + member.lastName,
+              url: url,
+            },
+          ]);
+        });
+
 
         // Mettre à jour l'état avec la liste des utilisateurs récupérés sans équipe
-        setUsers(usersWithoutTeamAndStudentRole);
+        setUsers(studentsWithoutTeam);
         // Ajouter un log pour suivre les utilisateurs récupérés
         console.log(
           "Utilisateurs récupérés avec succès :",
-          usersWithoutTeamAndStudentRole
+          studentsWithoutTeam
         );
       } catch (error) {
         // Gérer les erreurs survenues lors de la récupération des utilisateurs
@@ -177,9 +190,12 @@ function CreateTeamDialog({ teamDialogOpen, handleModalClose ,setSnackbarOpen, s
               <li {...props}>
                 <div style={{ display: "flex", alignItems: "center" ,gap:"10px"}}>
                   <Avatar
-                    {...stringAvatar(
-                     `${option.firstName} ${option.lastName}`
-                    )}
+                    // {...stringAvatar(
+                    //  `${option.firstName} ${option.lastName}`
+                    // )}
+                    src={membersImages.find((member) => member.id === option.id)?.url}
+                    height={45}
+                    width={45}
                   />
                   <div>
                     <span>{`${option.firstName} ${option.lastName}`}</span>

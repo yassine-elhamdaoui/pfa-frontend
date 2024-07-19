@@ -6,7 +6,7 @@ import { LoadingButton } from '@mui/lab';
 import EditIcon from '@mui/icons-material/Edit';
 
 export default function ModifySprint({
-  setreorder,
+  setRender,
   sprint = {}, // default value if Story prop is not provided
   token,
   open,
@@ -50,6 +50,7 @@ export default function ModifySprint({
     try {
        
       await updateSprint(sprint.id, data, token);
+      setRender((prev) => !prev);
       setSnackbarMessage('Sprint Modified successfully');
       setSnackbarOpen(true);
     } catch (error) {
@@ -59,7 +60,6 @@ export default function ModifySprint({
     } finally {
       setLoading(false);
       handleModalClosesprint();
-      setreorder(prev=>!prev);
 
       
     }

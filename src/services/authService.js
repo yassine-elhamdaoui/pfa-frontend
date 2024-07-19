@@ -48,13 +48,10 @@ const authenticate = async (
   }
 };
 
-const register = async (jsonData,setSnackbarMessage,setSnackbarOpen,setLoading) => {
+const register = async (data,setSnackbarMessage,setSnackbarOpen,setLoading) => {
   const response = await fetch("http://localhost:8080/api/auth/register", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(jsonData),
+    body: data,
   });
   try {
     if (response.ok) {
@@ -121,4 +118,71 @@ const rejectUser = async (token,id ,setSnackbarOpen,setSnackbarMessage,setConfir
   
 }
 
-export { authenticate, register , acceptUser, rejectUser};
+const forgotPassword = async (email, setSnackbarOpen, setSnackbarMessage,setLoading,setActiveStep) => {
+  const response = await fetch("http://localhost:8080/api/auth/forgot-password", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: email,
+  });
+
+  if (response.ok) {
+    setSnackbarMessage("Email sent successfully");
+    setSnackbarOpen(true);
+    setLoading(false);
+    console.log("Email sent successfully");
+        setActiveStep((prevActiveStep) => prevActiveStep + 1);
+    console.log("after the setActiveStep");
+
+
+  } else {
+    setSnackbarMessage("Error sending password reset email");
+        setActiveStep((prevActiveStep) => prevActiveStep + 1);
+
+    setSnackbarOpen(true);
+    setLoading(false);
+  }
+};
+
+const validateToken = async (email,token,setSnackBarOpen,setSnackbarMessage,setLoading,setActiveStep) => {
+  const response = await fetch(`http://localhost:8080/api/auth/validate-token?token=${token}&email=${email}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  console.log(await response.json());
+  if (response.ok) {
+    setSnackBarOpen(true);
+    setSnackbarMessage("Token is valid");
+    setLoading(false);
+    setActiveStep((prevActiveStep) => prevActiveStep + 1);
+
+  } else {
+    setSnackBarOpen(true);
+    setSnackbarMessage("Token is invalid");
+    setLoading(false);
+  }
+}
+
+const resetPassword = async (token,password,setSnackBarOpen,setSnackbarMessage,setLoading) => {
+  const response = await fetch(`http://localhost:8080/api/auth/reset-password?token=${token}&password=${password}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (response.ok) {
+    setSnackBarOpen(true);
+    setSnackbarMessage("Password reset successfully");
+    setLoading(false);
+  } else {
+    setSnackBarOpen(true);
+    setSnackbarMessage("Error resetting password");
+    setLoading(false);
+  }
+}
+
+export { authenticate, register, acceptUser, rejectUser, forgotPassword ,resetPassword,validateToken};

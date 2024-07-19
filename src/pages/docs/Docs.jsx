@@ -33,7 +33,7 @@ import {
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { addComment, downloadFile } from "../../services/documentService";
 import { getTeamById } from "../../services/teamService";
-import { getUserById } from "../../services/userService";
+import { downLoadProfileImage, getUserById } from "../../services/userService";
 import { stringAvatar } from "../../utils/generalUtils";
 import KeyboardDoubleArrowDownRoundedIcon from "@mui/icons-material/KeyboardDoubleArrowDownRounded";
 import UploadedFilesDialog from "../../components/dialogs/UploadedFilesDialog";
@@ -44,6 +44,7 @@ import { useTheme } from "@mui/material/styles";
 import DocsSkeleton from "./DocsSkeleton";
 import { useSearchParams } from "react-router-dom";
 import { getProjectById } from "../../services/projectService";
+import { forEach } from "lodash";
 
 function Docs() {
   const theme = useTheme();
@@ -62,6 +63,8 @@ function Docs() {
     console.log(folder);
     setAnchorEl(event.currentTarget);
   };
+
+  const [authorsImages, setAuthorsImages] = useState([]);
   const handleMoreMenuClose = () => {
     setAnchorEl(null);
   };
@@ -123,6 +126,7 @@ function Docs() {
 
   const [team, setTeam] = useState({});
   const [project, setProject] = useState({});
+  const [user, setUser] = useState({});
   const [openedFolder, setOpenedFolder] = useState({});
   const [openedFile, setOpenedFile] = useState({});
   const [activeFiles, setActiveFiles] = useState([]);
@@ -162,6 +166,7 @@ function Docs() {
       }
       try {
           const fetchedUser = await getUserById(userId, token);
+          setUser(fetchedUser);
           console.log(fetchedUser);
           if (
             fetchedUser.authorities.find(
@@ -178,11 +183,38 @@ function Docs() {
               )
             )();    
           }else{
+            console.log("here");
             const fetchedTeam = await getTeamById(fetchedUser.teamId, token);
-            console.log(fetchedTeam);
             setTeam(fetchedTeam);
+            forEach(fetchedTeam.members, async (member) => {
+              console.log(member.firstName);
+              const url = await downLoadProfileImage(member.id, token);
+              console.log(member.firstName);
+              setAuthorsImages((prev) => [
+                ...prev,
+                {
+                  id: member.id,
+                  name: member.firstName + " " + member.lastName,
+                  url: url,
+                },
+              ]);
+            });
+            forEach(fetchedTeam.project.supervisorIds, async (supervisor) => {
+              console.log(supervisor);
+              const url = await downLoadProfileImage(supervisor, token);
+              setAuthorsImages((prev) => [
+                ...prev,
+                {
+                  id: supervisor,
+                  name: "",
+                  url: url,
+                },
+              ]);
+            });
+
             setFolders(fetchedTeam.project.folders);
             setProject(fetchedTeam.project);
+            console.log(fetchedTeam.project);
             console.log(
               fetchedTeam.project.folders
               .find((folder) => folder.id === openedFolder.id)
@@ -240,10 +272,16 @@ function Docs() {
     }));
     setRender((prev) => !prev);
   };
-  return (
-    loading ? <DocsSkeleton />:
-    (
-      <Box sx={{ display: "flex"}}>
+  return loading ? (
+    <DocsSkeleton />
+  ) : (team && Object.keys(team).length > 0) ||
+    (user &&
+      Object.keys(user).length > 0 &&
+      user.authorities.find((auth) => auth.authority === "ROLE_SUPERVISOR") !==
+        undefined) ? (
+    (console.log(team),
+    project && Object.keys(project).length > 0 ? (
+      <Box sx={{ display: "flex" }}>
         <Box
           sx={{
             width: windowWidth < 900 ? "calc(100% + 10px)" : "65%",
@@ -265,22 +303,23 @@ function Docs() {
             <BreadCrumb
               items={[
                 { label: "Home", href: "/" },
+                { label: "Dashboard", href: "/" },
                 { label: "Docs", href: "/docs" },
               ]}
             />
             {/* <Search
-              sx={{
-                backgroundColor: mode === "dark" ? "#444" : "#33333320",
-              }}
-            >
-              <SearchIconWrapper>
-                <SearchIcon />
-              </SearchIconWrapper>
-              <StyledInputBase
-                placeholder="Search…"
-                inputProps={{ "aria-label": "search" }}
-              />
-            </Search> */}
+                sx={{
+                  backgroundColor: mode === "dark" ? "#444" : "#33333320",
+                }}
+              >
+                <SearchIconWrapper>
+                  <SearchIcon />
+                </SearchIconWrapper>
+                <StyledInputBase
+                  placeholder="Search…"
+                  inputProps={{ "aria-label": "search" }}
+                />
+              </Search> */}
           </Box>
           <BreadCrumb items={[{ label: "Folders" }]} />
           <Box
@@ -314,7 +353,8 @@ function Docs() {
                     minWidth: "200px",
                     cursor: "pointer",
                     height: "130px",
-                    backgroundColor: mode === "dark" ? "#44444450" : "#33333320",
+                    backgroundColor:
+                      mode === "dark" ? "#44444450" : "#33333320",
                   }}
                   onClick={handleFolderClicked(folder)}
                 >
@@ -329,20 +369,25 @@ function Docs() {
                     {openedFolder && openedFolder.id === folder.id ? (
                       <img src="/src/assets/folder-open.png" height={45} />
                     ) : (
-                      <FolderIcon sx={{ fontSize: "50px", color: "lightblue" }} />
+                      <FolderIcon
+                        sx={{ fontSize: "50px", color: "lightblue" }}
+                      />
                     )}
-                    {folder.name !== "Documents" && folder.name !== "Report" && (
-                      <IconButton
-                        aria-label="more"
-                        id="long-button"
-                        aria-controls={open ? "long-menu" : undefined}
-                        aria-expanded={open ? "true" : undefined}
-                        aria-haspopup="true"
-                        onClick={(event) => handleMoreMenuClick(event, folder)}
-                      >
-                        <MoreVertIcon />
-                      </IconButton>
-                    )}
+                    {folder.name !== "Documents" &&
+                      folder.name !== "Report" && (
+                        <IconButton
+                          aria-label="more"
+                          id="long-button"
+                          aria-controls={open ? "long-menu" : undefined}
+                          aria-expanded={open ? "true" : undefined}
+                          aria-haspopup="true"
+                          onClick={(event) =>
+                            handleMoreMenuClick(event, folder)
+                          }
+                        >
+                          <MoreVertIcon />
+                        </IconButton>
+                      )}
                   </div>
                   <Typography variant="h6">{folder.name}</Typography>
                   <Typography variant="subtitle2" color="textSecondary">
@@ -387,26 +432,26 @@ function Docs() {
             }}
           >
             <BreadCrumb items={[{ label: "All Files" }]} />
-              <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                {selectedFiles.length > 0 && (
-                    <Tooltip title="delete">
-                    <IconButton onClick={setConfirmationOpenDialog}>
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
-                )}
-                <Tooltip title="add files">
-                  <IconButton onClick={handleAddFilesClicked}>
-                    <AddCircleOutline sx={{ fontSize: "30px" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+              {selectedFiles.length > 0 && (
+                <Tooltip title="delete">
+                  <IconButton onClick={setConfirmationOpenDialog}>
+                    <DeleteIcon />
                   </IconButton>
                 </Tooltip>
-                <input
-                  type="file"
-                  multiple
-                  style={{ display: "none" }}
-                  onChange={handleFileChange}
-                />
-              </div>
+              )}
+              <Tooltip title="add files">
+                <IconButton onClick={handleAddFilesClicked}>
+                  <AddCircleOutline sx={{ fontSize: "30px" }} />
+                </IconButton>
+              </Tooltip>
+              <input
+                type="file"
+                multiple
+                style={{ display: "none" }}
+                onChange={handleFileChange}
+              />
+            </div>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <DataGrid
@@ -474,7 +519,9 @@ function Docs() {
                 ? windowWidth < 900
                   ? "#121212"
                   : "#44444450"
-                : windowWidth < 900 ? "#fff":"#33333320",
+                : windowWidth < 900
+                ? "#fff"
+                : "#33333320",
             borderRadius: "10px",
             padding: "10px",
             display:
@@ -485,7 +532,7 @@ function Docs() {
                 : "flex",
             flexDirection: "column",
             gap: "10px",
-            
+
             minHeight:
               windowWidth < 900
                 ? "calc(100svh - 50px)"
@@ -500,13 +547,11 @@ function Docs() {
             }}
           >
             <BreadCrumb items={[{ label: "File" }]} />
-            {windowWidth < 900 && 
-              <IconButton
-                onClick={() => setIsMessagesContainerVisible(false)}
-              >
+            {windowWidth < 900 && (
+              <IconButton onClick={() => setIsMessagesContainerVisible(false)}>
                 <CloseIcon />
               </IconButton>
-            }
+            )}
           </div>
           {openedFile && Object.keys(openedFile).length > 0 ? (
             <>
@@ -514,7 +559,11 @@ function Docs() {
                 sx={{
                   display: "flex",
                   alignItems: "center",
-                  border: `1px solid ${mode === "dark" ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)"}`,
+                  border: `1px solid ${
+                    mode === "dark"
+                      ? "rgba(255,255,255,0.3)"
+                      : "rgba(0,0,0,0.3)"
+                  }`,
                   borderRadius: "5px",
                   padding: "5px",
                   justifyContent: "space-between",
@@ -580,7 +629,9 @@ function Docs() {
                         alignItems: "start",
                         gap: "5px",
                         width:
-                          comment.authorId === parseInt(userId) ? "100%" : "90%",
+                          comment.authorId === parseInt(userId)
+                            ? "100%"
+                            : "90%",
                         flexFlow:
                           comment.authorId === parseInt(userId)
                             ? "row-reverse"
@@ -588,7 +639,14 @@ function Docs() {
                       }}
                     >
                       {comment.authorId !== parseInt(userId) && (
-                        <Avatar {...stringAvatar(comment.authorName)} />
+                        <Avatar
+                          src={
+                            authorsImages.find(
+                              (author) => author.id === comment.authorId
+                            )?.url
+                          }
+                          sx={{ width: "35px", height: "35px" }}
+                        />
                       )}
                       <Box
                         sx={{
@@ -719,10 +777,16 @@ function Docs() {
           setSnackbarMessage={setSnackbarMessage}
         />
         <ConfirmationDialog
-          message= {isFolderDeletion ? "Are you sure you want to delete this folder?" : "Are you sure you want to delete these files?"}
+          message={
+            isFolderDeletion
+              ? "Are you sure you want to delete this folder?"
+              : "Are you sure you want to delete these files?"
+          }
           openDialog={confirmationOpenDialog}
           setOpenDialog={setConfirmationOpenDialog}
-          handleConfirmClick= {isFolderDeletion ? handleConfirmationDone : handleDeleteFiles}
+          handleConfirmClick={
+            isFolderDeletion ? handleConfirmationDone : handleDeleteFiles
+          }
           setLoading={setConfirmLoading}
           loading={confirmLoading}
         />
@@ -781,7 +845,56 @@ function Docs() {
           </Alert>
         </Snackbar>
       </Box>
-    )
+    ) : (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          paddingTop: "60px",
+          alignItems: "center",
+        }}
+      >
+        <img src="/src/assets/document.png" height={200} width={200} />
+        <Typography variant="h5" color="textSecondary" textAlign="center">
+          No project found
+        </Typography>
+        <Typography variant="body2" color="textSecondary" textAlign="center">
+          {Object.keys(user).length > 0 &&
+          user.authorities.find(
+            (auth) => auth.authority === "ROLE_SUPERVISOR"
+          ) !== undefined
+            ? "This team still don't have a project assigned to it"
+            : "Wait until you're assigned to a project"}
+        </Typography>
+      </div>
+    ))
+  ) : (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        paddingTop: "100px",
+        alignItems: "center",
+      }}
+    >
+      <img src="/src/assets/team.png" height={200} width={200} />
+      <Typography variant="h5" color="textSecondary" textAlign="center">
+        {Object.keys(user).length > 0 &&
+        user.authorities.find(
+          (auth) => auth.authority === "ROLE_SUPERVISOR"
+        ) !== undefined
+          ? "No team found for this project"
+          : "You are not in a team"}
+      </Typography>
+      <Typography variant="body2" color="textSecondary" textAlign="center">
+        {Object.keys(user).length > 0 &&
+        user.authorities.find(
+          (auth) => auth.authority === "ROLE_SUPERVISOR"
+        ) !== undefined
+          ? "Wait until the a team is assigned to this project"
+          : "Still have no team ,create one or wait till you're added to one"}
+      </Typography>
+    </div>
   );
 }
 

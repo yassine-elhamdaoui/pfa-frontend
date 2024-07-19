@@ -20,22 +20,31 @@ import {
 } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 import CloseIcon from "@mui/icons-material/Close";
-import { getUsers } from "../../services/userService";
+import {
+  downLoadProfileImage,
+  getSupervisors,
+  getUsers,
+} from "../../services/userService";
 import createProject from "../../services/projectService";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { stringAvatar } from "../../utils/generalUtils";
-import { StyledDialog, StyledDialogContent, StyledGrid, VisuallyHiddenInput } from "./createProjectDialog";
+import {
+  StyledDialog,
+  StyledDialogContent,
+  StyledGrid,
+  VisuallyHiddenInput,
+} from "./createProjectDialog";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { hasRole } from "../../utils/userUtiles";
 import { getAllTeams } from "../../services/teamService";
-import { set } from "lodash";
+import { forEach, set } from "lodash";
 const lightColors = [
-   "rgba(173, 216, 230, 0.5)",
-   "rgba(216, 191, 216, 0.5)",
-   "rgba(144, 238, 144, 0.5)",
-   "rgba(255, 255, 153, 0.5)",
-   "rgba(255, 204, 153, 0.5)",
-   "rgba(255, 182, 193, 0.5)",
+  "rgba(173, 216, 230, 0.5)",
+  "rgba(216, 191, 216, 0.5)",
+  "rgba(144, 238, 144, 0.5)",
+  "rgba(255, 255, 153, 0.5)",
+  "rgba(255, 204, 153, 0.5)",
+  "rgba(255, 182, 193, 0.5)",
 ];
 
 const chipStyles = {};
@@ -43,7 +52,7 @@ for (let i = 0; i < 20; i++) {
   chipStyles[
     `& .css-1pje9j3-MuiButtonBase-root-MuiChip-root:nth-of-type(${i + 1})`
   ] = {
-    backgroundColor: lightColors[i%6],
+    backgroundColor: lightColors[i % 6],
   };
   chipStyles[
     `& .css-38raov-MuiButtonBase-root-MuiChip-root:nth-of-type(${i + 1})`
@@ -52,9 +61,6 @@ for (let i = 0; i < 20; i++) {
   };
 }
 
-
-
-
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="down" ref={ref} {...props} />;
 });
@@ -62,8 +68,13 @@ const Transition = forwardRef(function Transition(props, ref) {
 const token = localStorage.getItem("token");
 
 // eslint-disable-next-line react/prop-types
-function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarOpen, setSnackbarMessage }) {
-  const [techOptions,setTechOptions] = useState([
+function CreateProjectDialog({
+  projectDialogOpen,
+  handleModalClose,
+  setSnackbarOpen,
+  setSnackbarMessage,
+}) {
+  const [techOptions, setTechOptions] = useState([
     {
       title: "JavaScript",
       iconClassName: "devicon-javascript-plain colored",
@@ -164,7 +175,7 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
   const isHOB = hasRole("ROLE_HEAD_OF_BRANCH");
   const isSmallScreen = useMediaQuery((theme) => theme.breakpoints.down("sm"));
   const [supervisors, setSupervisors] = useState([]);
-  const [teams , setTeams] = useState([]);
+  const [teams, setTeams] = useState([]);
   const [projectType, setProjectType] = useState("old");
   const [formData, setFormData] = useState({
     title: "",
@@ -172,7 +183,7 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
     techStack: [],
     codeLink: "",
     branch: 1,
-    academicYear:"",
+    academicYear: "",
     supervisors: [],
     files: [],
     report: null,
@@ -180,28 +191,41 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
   });
   const [loading, setLoading] = useState(false);
 
-    const [uploadedFiles, setUploadedFiles] = useState([]);
-    const [uploadedReport, setUploadedReport] = useState(null);
-
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [uploadedReport, setUploadedReport] = useState(null);
+  const [supervisorsImages, setSupervisorsImages] = useState([]);
 
   useEffect(() => {
     async function fetchData() {
-      const users = await getUsers(token);
-      const fetchedTeams = await getAllTeams(token);
-      setSupervisors(
-        users.filter(
-          (user) =>
-            user.email !== localStorage.getItem("email") &&
-            user.authorities.some(
-              (authority) => authority.authority === "ROLE_SUPERVISOR"
-            )
-        )
-      );
-      setTeams(fetchedTeams.filter((team) => team.projectId === null));
+      const fetchedSupervisors = await getSupervisors(token);
+      let academicYear = "";
+      const year = new Date().getFullYear();
+      const month = new Date().getMonth();
+      if (month >= 9 && month <= 12) {
+        academicYear = `${year}/${year + 1}`;
+      } else if (month >= 1 && month <= 7) {
+        academicYear = `${year - 1}/${year}`;
+      }
+
+      const fetchedTeams = await getAllTeams(token, academicYear);
+      forEach(fetchedSupervisors, async (supervisor) => {
+        console.log(supervisor.firstName);
+        const url = await downLoadProfileImage(supervisor.id, token);
+        console.log(supervisor.firstName);
+        setSupervisorsImages((prev) => [
+          ...prev,
+          {
+            id: supervisor.id,
+            name: supervisor.firstName + " " + supervisor.lastName,
+            url: url,
+          },
+        ]);
+      });
+      setSupervisors(fetchedSupervisors);
+      setTeams(fetchedTeams.filter((team) => team.project === null));
     }
     fetchData();
   }, []);
-
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((prevFormData) => ({
@@ -218,9 +242,7 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
     }));
   };
 
-
   const handleTechChange = (event, value) => {
-
     setFormData((prevFormData) => ({
       ...prevFormData,
       techStack: value,
@@ -294,12 +316,12 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
     } else if (month >= 1 && month <= 7) {
       formData.academicYear = `${year - 1}/${year}`;
     }
-    data.append("academicYear",formData.academicYear)
+    data.append("academicYear", formData.academicYear);
     data.append("branch", formData.branch);
     if (formData.team && formData.team.id !== null) {
-      data.append("team",formData.team.id);
-    }else{
-      data.append("team", null)
+      data.append("team", formData.team.id);
+    } else {
+      data.append("team", null);
     }
     data.append(
       "supervisors",
@@ -316,12 +338,9 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
     }
 
     setLoading(false);
-    await createProject(token, data ,setSnackbarOpen , setSnackbarMessage);
+    await createProject(token, data, setSnackbarOpen, setSnackbarMessage);
     handleModalClose();
   };
-
-
-
 
   return (
     <StyledDialog
@@ -451,9 +470,11 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
                 getOptionLabel={(option) => option.name}
                 renderOption={(props, option) => (
                   <li {...props}>
-                    <div style={{display:"flex",flexDirection:"column"}}>
+                    <div style={{ display: "flex", flexDirection: "column" }}>
                       <p>{option.name}</p>
-                      <Typography color="textSecondary" variant="body2">{option.responsible.email}</Typography>
+                      <Typography color="textSecondary" variant="body2">
+                        {option.responsible.email}
+                      </Typography>
                     </div>
                   </li>
                 )}
@@ -491,9 +512,16 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
                     }}
                   >
                     <Avatar
-                      {...stringAvatar(
-                        `${option.firstName} ${option.lastName}`
-                      )}
+                      // {...stringAvatar(
+                      //   `${option.firstName} ${option.lastName}`
+                      // )}
+                      src={
+                        supervisorsImages.find(
+                          (supervisor) => supervisor.id === option.id
+                        )?.url
+                      }
+                      height={30}
+                      width={30}
                     />
                     <div>
                       <span>{`${option.firstName} ${option.lastName}`}</span>
@@ -585,9 +613,10 @@ function CreateProjectDialog({ projectDialogOpen, handleModalClose ,setSnackbarO
                         {(uploadedReport.size * 0.000001).toFixed(2)} MB
                       </Typography>
                     </div>
-                    <DeleteOutlineIcon 
+                    <DeleteOutlineIcon
                       sx={{ cursor: "pointer" }}
-                    onClick={handleRemoveReport} />
+                      onClick={handleRemoveReport}
+                    />
                   </div>
                 )}
               </div>

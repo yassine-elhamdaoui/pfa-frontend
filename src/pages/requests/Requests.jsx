@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import BreadCrumb from "../../components/breadCrumb/BreadCrumb";
 import JoinRequest from "../../components/joinRequest/JoinRequest";
 import { hasRole } from "../../utils/userUtiles";
@@ -10,6 +10,7 @@ import { Alert, Skeleton, Snackbar, Typography } from "@mui/material";
 import PlaceHolder from "../../components/placeHolder/PlaceHolder";
 import JoinRequestSkeleton from "../../components/joinRequest/JoinRequestSkeleton";
 import DoNotDisturbAltIcon from "@mui/icons-material/DoNotDisturbAlt";
+import { set } from "lodash";
 
 const token = localStorage.getItem("token");
 function Requests() {
@@ -20,25 +21,36 @@ function Requests() {
       const [openDialog, setOpenDialog] = useState(false);
       const [isAcceptConfirmation, setIsAcceptConfirmation] = useState(true);
       const [snackbarOpen, setSnackbarOpen] = useState(false);
-      const [snackbarMessage, setSnackbarMessage] = useState("");
+      const [snackbarMessage, setSnackbarMessage] = useState("")
+      const initialRender = useRef(true);
       const [selectedUser, setSelectedUser] = useState({});
+      const [render,setRender] = useState([]);
       const handleSnackbarClose = () => {
         setSnackbarOpen(false);
       };
   useEffect(() => {
     const fetchRequests = async () => {
+      console.log(initialRender.current);
+            if (initialRender.current) {
+              setLoading(true);
+            }
       try {
-        setLoading(true);
         const fetchedRequests = await getJoinRequests(token);
         setRequests(fetchedRequests);
-        setLoading(false)
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching requests:", error);
+      } finally {
+        if (!initialRender.current) {
+          setLoading(false);
+        }
       }
     };
 
     fetchRequests();
-  }, []);
+    initialRender.current = false; 
+
+  }, [render]);
   console.log(selectedUser);
   console.log(requests);
   const isHOB = hasRole("ROLE_HEAD_OF_BRANCH");
@@ -82,6 +94,7 @@ function Requests() {
         <BreadCrumb
           items={[
             { label: "Home", href: "/" },
+            { label: "Dashboard", href: "/" },
             { label: "Requests", href: "/requests" },
           ]}
         />
@@ -104,6 +117,7 @@ function Requests() {
                 setOpenDialog={setOpenDialog}
                 setIsAcceptConfirmation={setIsAcceptConfirmation}
                 setSelectedUser={setSelectedUser}
+                setRender={setRender}
               />
             </div>
           ))}
@@ -118,20 +132,20 @@ function Requests() {
           setOpenDialog={setOpenDialog}
           handleConfirmClick={() =>
             isAcceptConfirmation
-              ? acceptUser(
+              ? (acceptUser(
                   token,
                   selectedUser,
                   setSnackbarOpen,
                   setSnackbarMessage,
                   setConfirmLoading
-                )
-              : rejectUser(
+                ) , setRender((prev)=>!prev))
+              : (rejectUser(
                   token,
                   selectedUser,
                   setSnackbarOpen,
                   setSnackbarMessage,
                   setConfirmLoading
-                )
+                ),setRender((prev)=>!prev))
           }
           setLoading={setConfirmLoading}
           loading={confirmLoading}

@@ -1,9 +1,11 @@
+/* eslint-disable react/prop-types */
 import React, { useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from '@mui/material';
 import { useVelocity } from 'framer-motion';
 import { CreateSprint } from '../../services/backLogService';
+import { forEach } from 'lodash';
 
-export default function CreateSprintDialog({ setreorder,projectId,token,SprintDialogOpen, handleModalClose, setSnackbarOpen, setSnackbarMessage }) {
+export default function CreateSprintDialog({sprintData, setRender,projectId,token,SprintDialogOpen, handleModalClose, setSnackbarOpen, setSnackbarMessage }) {
   // State variables for form data
 
   const [formData, setFormData] = useState({
@@ -16,25 +18,53 @@ export default function CreateSprintDialog({ setreorder,projectId,token,SprintDi
   const [loading, setLoading] = useState(false);
 
   // Function to handle form submission
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setLoading(true);
-    console.log(formData);
-    try {
-      await CreateSprint(formData, token);
-      console.log('Sprint Created successfully');
-     
-     
-    } catch (error) {
-      console.error('Error creating sprint:', error);
-    }
-    finally{
-      setLoading(false);
-      handleModalClose();
-       setreorder(prev=>!prev);
-    }
-    
-  };
+const handleSubmit = async (event) => {
+  event.preventDefault();
+
+  // Check for duplicate sprint name
+  const duplicateName = sprintData.some(
+    (sprint) => formData.name === sprint.name
+  );
+  if (duplicateName) {
+    setSnackbarMessage("Sprint with same name already exists");
+    setSnackbarOpen(true);
+    return;
+  }
+
+  // Check for overlapping sprint dates
+  const overlappingDates = sprintData.some(
+    (sprint) =>
+      (formData.start_date < sprint.starDate &&
+        formData.end_date > sprint.endDate) || // New sprint encompasses existing sprint
+      (formData.start_date > sprint.starDate &&
+        formData.end_date < sprint.endDate) || // New sprint is within existing sprint
+      (formData.start_date < sprint.starDate &&
+        formData.end_date < sprint.endDate &&
+        formData.end_date > sprint.starDate) || // New sprint overlaps the start of existing sprint
+      (formData.start_date > sprint.starDate &&
+        formData.start_date < sprint.endDate &&
+        formData.end_date > sprint.endDate) // New sprint overlaps the end of existing sprint
+  );
+  if (overlappingDates) {
+    setSnackbarMessage("Sprint dates overlap with existing sprint");
+    setSnackbarOpen(true);
+    return;
+  }
+
+  console.log(projectId);
+  // setLoading(true);
+  console.log(formData);
+  try {
+    await CreateSprint(formData, token);
+    setRender((prev) => !prev);
+  } catch (error) {
+    console.error("Error creating sprint:", error);
+  } finally {
+    setLoading(false);
+    handleModalClose();
+  }
+};
+
 
   // Function to handle input changes
   const handleChange = (event) => {

@@ -6,7 +6,7 @@ import { LoadingButton } from '@mui/lab';
 import EditIcon from '@mui/icons-material/Edit';
 
 export default function CreateModifyStoryDialog({
-  setreorder,
+  setRender,
   Story = {}, // default value if Story prop is not provided
   token,
   StoryDialogOpen,
@@ -42,6 +42,7 @@ export default function CreateModifyStoryDialog({
     setLoading(true);
     try {
       await ModifyStory(Story.id, data, token);
+      setRender(prev=>!prev);
       setSnackbarMessage('User story saved successfully');
       setSnackbarOpen(true);
     } catch (error) {
@@ -51,7 +52,6 @@ export default function CreateModifyStoryDialog({
     } finally {
       setLoading(false);
       handleModalCloseStory();
-      setreorder(prev=>!prev);
       
     }
   };

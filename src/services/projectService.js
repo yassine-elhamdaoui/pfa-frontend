@@ -11,10 +11,10 @@ export default async function createProject(token, data, setSnackbarOpen, setSna
     setSnackbarOpen(true);
     return await response.json();
   } else {
-    console.log(await response.json());
     setSnackbarMessage("Failed to create project");
     setSnackbarOpen(true);
-    return await response.json();
+    const data = await response.json();
+    return data;
   }
 } 
 export const updateProject = async (token, projectId, data, setSnackbarOpen, setSnackbarMessage) => {
@@ -49,7 +49,6 @@ export const getProjectById = async (projectId, token) => {
           },
         }
       );
-
       if (!response.ok) {
         throw new Error(`Failed to fetch project: ${response.status}`);
       }
@@ -199,6 +198,7 @@ export const makeAssignment = async (
       throw new Error("Error during assignment");
     }
   } catch (error) {
+  console.log((await response.json()))
     setSnackbarMessage("Error during assignment");
     setSnackbarOpen(true);
     setAssignmentLoading(false);
@@ -251,10 +251,11 @@ export const validateAssignments = async (
     }
   );
   if (response.ok) {
-    setSnackbarMessage((await response.json()).message);
+    const data = await response.json();
+    setSnackbarMessage(data.message);
     setSnackbarOpen(true);
     setAssignmentLoading(false);
-    return await response.json();
+    return data
   } else {
         setSnackbarMessage("Error during assignment");
         setSnackbarOpen(true);

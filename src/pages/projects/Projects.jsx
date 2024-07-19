@@ -20,6 +20,12 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import {
+  Search,
+  SearchIconWrapper,
+  StyledInputBase,
+} from "../../components/navBar/navBar";
+import SearchIcon from "@mui/icons-material/Search";
 import AvatarGroup from "@mui/material/AvatarGroup";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -30,17 +36,18 @@ import {
   getAllProjects,
   rejectProject,
 } from "../../services/projectService";
-import { getUsers } from "../../services/userService";
+import { downLoadProfileImage, getUsers } from "../../services/userService";
 import { stringAvatar } from "../../utils/generalUtils";
 import { hasRole } from "../../utils/userUtiles";
 import ConfirmationDialog from "../../components/dialogs/ConfirmationDialog";
 import ProjectSkeleton from "./ProjectSkeleton";
 import BreadCrumb from "../../components/breadCrumb/BreadCrumb";
 import { EmojiObjectsOutlined } from "@mui/icons-material";
+import { forEach } from "lodash";
 
-const mode = localStorage.getItem("mode");
-const isHOB = hasRole("ROLE_HEAD_OF_BRANCH");
 function Projects() {
+  const mode = localStorage.getItem("mode");
+  const isHOB = hasRole("ROLE_HEAD_OF_BRANCH");
   const [users, setUsers] = useState([]);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -59,9 +66,16 @@ function Projects() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [years, setYears] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+    const [supervisorsImages, setSupervisorsImages] = useState([]);
+
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
+  
   const handleClick = (event, Pro) => {
     console.time("handleClick"); // Start measuring time
     setAnchorEl(event.currentTarget);
@@ -127,6 +141,12 @@ function Projects() {
     fetchYears();
   }, []);
 
+    useEffect(() => {
+      const handleResize = () => setWindowWidth(window.innerWidth);
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }, [windowWidth]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -134,6 +154,21 @@ function Projects() {
         setUsers(fetchUsers);
 
         const fetchProjects = await getAllProjects(token, yearSelected, page);
+        forEach(fetchProjects, async (project) => {
+          forEach(project.supervisorIds, async (supervisor) => {
+            const url = await downLoadProfileImage(
+              supervisor,
+              token
+            );
+            setSupervisorsImages((prev) => [
+              ...prev,
+              {
+                id: supervisor,
+                url: url,
+              },
+            ]);
+          });
+        });
         setProjects(fetchProjects);
         console.log("/////////////////////////////////////////////////");
         console.log(fetchProjects);
@@ -149,6 +184,13 @@ function Projects() {
 
     fetchData();
   }, [yearSelected, page]);
+    const filteredProjects = projects && projects.filter(
+    (item) =>
+      item.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
 
   if (loading) {
     return (
@@ -270,7 +312,7 @@ function Projects() {
               { label: "Projects", link: "#" },
               {
                 label: loading2 ? (
-                  <div style={{width:"80px" ,height:"40px"}}></div>
+                  <div style={{ width: "80px", height: "40px" }}></div>
                 ) : (
                   yearSelected
                 ),
@@ -279,26 +321,76 @@ function Projects() {
             ]}
           />
 
-          <IconButton
-            aria-controls="filter-menu"
-            aria-haspopup="true"
-            onClick={handleFilterClick}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+            }}
           >
-            <FilterListIcon />
-          </IconButton>
-          <Menu
-            id="filter-menu"
-            anchorEl={anchorEl2}
-            open={Boolean(anchorEl2)}
-            onClose={handleFilterClose}
-          >
-            {years.map((year, index) => (
-              <MenuItem key={index} onClick={() => handleFilterSelect(year)}>
-                {year}
-              </MenuItem>
-            ))}
-          </Menu>
+            {windowWidth > 630 && (
+              <Search
+                sx={{
+                  margin: 0,
+                  backgroundColor: mode === "dark" ? "#333" : "#f5f5f5",
+                  "&:hover": {
+                    backgroundColor:
+                      mode === "dark" ? "#33333390" : "#33333320",
+                  },
+                }}
+              >
+                <SearchIconWrapper>
+                  <SearchIcon />
+                </SearchIconWrapper>
+                <StyledInputBase
+                  placeholder="Search for a project..."
+                  inputProps={{ "aria-label": "search" }}
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                />
+              </Search>
+            )}
+            <IconButton
+              aria-controls="filter-menu"
+              aria-haspopup="true"
+              onClick={handleFilterClick}
+            >
+              <FilterListIcon />
+            </IconButton>
+            <Menu
+              id="filter-menu"
+              anchorEl={anchorEl2}
+              open={Boolean(anchorEl2)}
+              onClose={handleFilterClose}
+            >
+              {years.map((year, index) => (
+                <MenuItem key={index} onClick={() => handleFilterSelect(year)}>
+                  {year}
+                </MenuItem>
+              ))}
+            </Menu>
+          </Box>
         </Box>
+          {windowWidth <= 630 && (
+            <Search
+              sx={{
+                margin: 0,
+                backgroundColor: mode === "dark" ? "#333" : "#f5f5f5",
+                "&:hover": {
+                  backgroundColor: mode === "dark" ? "#33333390" : "#33333320",
+                },
+              }}
+            >
+              <SearchIconWrapper>
+                <SearchIcon />
+              </SearchIconWrapper>
+              <StyledInputBase
+                placeholder="Search for a project..."
+                inputProps={{ "aria-label": "search" }}
+                value={searchQuery}
+                onChange={handleSearchChange}
+              />
+            </Search>
+          )}
 
         {loading3 ? (
           <ProjectSkeleton />
@@ -322,7 +414,7 @@ function Projects() {
                 }}
               >
                 <EmojiObjectsOutlined
-                  sx={{ fontSize: 64,color:"lightgray" }}
+                  sx={{ fontSize: 64, color: "lightgray" }}
                 />
                 <Typography
                   variant="h4"
@@ -333,126 +425,138 @@ function Projects() {
                 </Typography>
               </Box>
             )}
-            {projects.length > 0 && projects.map((Pro, index) => (
-              <Grid
-                item
-                xs={12}
-                sm={6}
-                md={6}
-                gap={"10px"}
-                key={Pro.id}
-                sx={{ minWidth: "300px" }}
-              >
-                <Card
+            {projects.length > 0 &&
+              filteredProjects.map((Pro, index) => (
+                <Grid
+                  item
+                  xs={12}
+                  sm={6}
+                  md={6}
+                  gap={"10px"}
                   key={Pro.id}
-                  sx={{
-                    display: "flex",
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    width: "100%",
-                    minHeight: "250px",
-                    flexGrow: 1,
-                    "&:hover": {
-                      boxShadow: 3, // More pronounced shadow on hover
-                    },
-                  }}
+                  sx={{ minWidth: "300px" }}
                 >
-                  <Box
+                  <Card
+                    key={Pro.id}
                     sx={{
-                      bgcolor: cardColors[index % cardColors.length],
-                      minWidth: "15px",
-                    }}
-                  />
-                  <Box
-                    variant="elevation"
-                    sx={{
-                      // bgcolor: cardColors[index % cardColors.length],
                       display: "flex",
-                      flexDirection: "column",
+                      flexDirection: "row",
                       justifyContent: "space-between",
-                      alignItems: "stretch",
-                      gap: "10px",
+                      width: "100%",
+                      minHeight: "250px",
                       flexGrow: 1,
-                      margin: 1,
+                      "&:hover": {
+                        boxShadow: 3, // More pronounced shadow on hover
+                      },
                     }}
-                    key={index}
                   >
-                    <Box sx={{ p: 2 }}>
-                      <Stack
-                        display="flex"
-                        direction="row"
-                        justifyContent="space-between"
-                        alignItems="center"
-                      >
-                        <Typography
-                          gutterBottom
-                          variant="h5"
-                          component="div"
-                          fontWeight={900}
-                          sx={{ display: "flex", alignItems: "center" }}
+                    <Box
+                      sx={{
+                        bgcolor: cardColors[index % cardColors.length],
+                        minWidth: "15px",
+                      }}
+                    />
+                    <Box
+                      variant="elevation"
+                      sx={{
+                        // bgcolor: cardColors[index % cardColors.length],
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
+                        alignItems: "stretch",
+                        gap: "10px",
+                        flexGrow: 1,
+                        margin: 1,
+                      }}
+                      key={index}
+                    >
+                      <Box sx={{ p: 2 }}>
+                        <Stack
+                          display="flex"
+                          direction="row"
+                          justifyContent="space-between"
+                          alignItems="center"
                         >
-                          <StickyNote2Icon />
                           <Typography
+                            gutterBottom
                             variant="h5"
-                            component="h2"
-                            fontWeight={600}
-                            onClick={() => {
-                              navigate(`/dashboard/projects/${Pro.id}`);
-                            }}
+                            component="div"
+                            fontWeight={900}
+                            sx={{ display: "flex", alignItems: "center" }}
                           >
-                            {Pro.title.substring(0, 20)}
-                            {Pro.title.length > 20 && "..."}
+                            <StickyNote2Icon />
+                            <Typography
+                              variant="h5"
+                              component="h2"
+                              fontWeight={600}
+                              sx={{ cursor: "pointer" }}
+                              onClick={() => {
+                                navigate(`/dashboard/projects/${Pro.id}`);
+                              }}
+                            >
+                              {Pro.title.substring(0, 20)}
+                              {Pro.title.length > 20 && "..."}
+                            </Typography>
                           </Typography>
+                          <Box sx={{ display: "flex", alignItems: "center" }}>
+                            {Pro.status === "new" && (
+                              <FiberNewIcon fontSize="large" />
+                            )}
+                            <IconButton
+                              aria-label="more"
+                              id="long-button"
+                              aria-controls={open ? "long-menu" : undefined}
+                              aria-expanded={open ? "true" : undefined}
+                              aria-haspopup="true"
+                              onClick={(event) => handleClick(event, Pro)}
+                            >
+                              <MoreVertIcon />
+                            </IconButton>
+                          </Box>
+                        </Stack>
+                        <Divider />
+                        <Typography
+                          color="text.secondary"
+                          variant="body2"
+                          marginTop={2}
+                          fontWeight={600}
+                        >
+                          {Pro.description.substring(0, 150)}
+                          {Pro.description.length > 100 && "..."}
                         </Typography>
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                          {Pro.status === "new" && (
-                            <FiberNewIcon fontSize="large" />
-                          )}
-                          <IconButton
-                            aria-label="more"
-                            id="long-button"
-                            aria-controls={open ? "long-menu" : undefined}
-                            aria-expanded={open ? "true" : undefined}
-                            aria-haspopup="true"
-                            onClick={(event) => handleClick(event, Pro)}
-                          >
-                            <MoreVertIcon />
-                          </IconButton>
-                        </Box>
-                      </Stack>
-                      <Divider />
-                      <Typography
-                        color="text.secondary"
-                        variant="body2"
-                        marginTop={2}
-                        fontWeight={600}
-                      >
-                        {Pro.description.substring(0, 150)}
-                        {Pro.description.length > 100 && "..."}
-                      </Typography>
 
-                      <Stack direction="row" spacing={1} paddingTop={3}>
-                        <AvatarGroup>
-                          {Pro.supervisorIds.map((SId) => {
-                            const user = users.find((user) => user.id === SId);
-                            if (user) {
-                              const Fullname = `${user.firstName} ${user.lastName}`;
-                              return (
-                                <Tooltip key={user.id} title={Fullname}>
-                                  <Avatar {...stringAvatar(Fullname)} />
-                                </Tooltip>
+                        <Stack direction="row" spacing={1} paddingTop={3}>
+                          <AvatarGroup>
+                            {Pro.supervisorIds.map((SId) => {
+                              const user = users.find(
+                                (user) => user.id === SId
                               );
-                            } else {
-                              return null;
-                            }
-                          })}
-                        </AvatarGroup>
-                      </Stack>
+                              if (user) {
+                                const Fullname = `${user.firstName} ${user.lastName}`;
+                                return (
+                                  <Tooltip key={user.id} title={Fullname}>
+                                    <Avatar
+                                      src={
+                                        supervisorsImages.find(
+                                          (img) => img.id === SId
+                                        )?.url
+                                      }
+                                      height={40}
+                                      width={40}
+                                    />
+                                  </Tooltip>
+                                );
+                              } else {
+                                return null;
+                              }
+                            })}
+                          </AvatarGroup>
+                        </Stack>
+                      </Box>
                     </Box>
-                  </Box>
-                </Card>
-              </Grid>
-            ))}
+                  </Card>
+                </Grid>
+              ))}
           </Grid>
         )}
         <Box sx={{ display: "flex", justifyContent: "center", marginTop: 2 }}>
@@ -475,7 +579,8 @@ function Projects() {
         >
           <MenuItem
             onClick={() => (
-              navigate(`/dashboard/projects/${selectedProject.id}`), handleClose()
+              navigate(`/dashboard/projects/${selectedProject.id}`),
+              handleClose()
             )}
           >
             View

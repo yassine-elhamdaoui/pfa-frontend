@@ -31,26 +31,33 @@ export const getAllTeams = async (token,academicYear) => {
 const createTeam = async (teamData, token, setSnackbarOpen, setSnackbarMessage) => {
   console.log(teamData);
     try {
-        const response = await fetch('http://localhost:8080/api/teams', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify(teamData),
-        });
+      const response = await fetch("http://localhost:8080/api/teams", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(teamData),
+      });
 
-        const data = await response.json();
-        
-        if (!response.ok) {
-            console.error('Failed to create team:', data);
-            throw new Error('Failed to create team');
-        }
-        localStorage.setItem("team", data.id);
-        console.log('Team created with success here is Backend response:', data);
-        setSnackbarMessage("Team created successfully"); // Message de succès
-        setSnackbarOpen(true); // Ouvrir le Snackbar
-        return data;
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Failed to create team:", data);
+        throw new Error("Failed to create team");
+      }
+      localStorage.setItem("team", data.id);
+      console.log("Team created with success here is Backend response:", data);
+      setSnackbarMessage("Team created successfully"); // Message de succès
+      setSnackbarOpen(true); // Ouvrir le Snackbar
+      localStorage.setItem("team", data.id);
+      let authorities = localStorage.getItem("authorities");
+      authorities = authorities ? JSON.parse(authorities) : [];
+      authorities.push({ authority: "ROLE_RESPONSIBLE" });
+      const updatedAuthorities = JSON.stringify(authorities);
+      localStorage.setItem("authorities", updatedAuthorities);
+
+      return data;
     } catch (error) {
         console.error('Error creating team:', error);
         setSnackbarMessage("Failed to create team"); // Message d'erreur
@@ -63,9 +70,9 @@ const createTeam = async (teamData, token, setSnackbarOpen, setSnackbarMessage) 
 
 
 
-export const getTeamById = async (teamId, token) => {
+const getTeamById = async (teamId, token) => {
   try {
-      const response = await fetch(`http://localhost:8081/api/teams/${teamId}`, {
+      const response = await fetch(`http://localhost:8080/api/teams/${teamId}`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -74,7 +81,7 @@ export const getTeamById = async (teamId, token) => {
       });
   
       if (!response.ok) {
-        throw new Error(`Failed to fetch team: ${response.status}`);
+        return {};
       }
   
       const team = await response.json();

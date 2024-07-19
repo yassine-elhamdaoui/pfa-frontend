@@ -40,6 +40,7 @@ function AssignmentsResult({ mode }) {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
 
+
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const handleDialogClose = () => {
     setOpenEditDialog(false);
@@ -154,7 +155,7 @@ function AssignmentsResult({ mode }) {
   ) : (Object.keys(assignment).length !== 0 &&
       assignment.completed === false &&
       isHOB) ||
-    assignment.completed === true ? (
+    Object.keys(assignment).length !== 0 ? (
     <div
       style={{
         height: "100%",
@@ -182,7 +183,7 @@ function AssignmentsResult({ mode }) {
           ]}
         />
         {assignment && assignment.completed === false && isHOB ? (
-          <div style={{display:"flex" , justifyContent:"center"}}>
+          <div style={{ display: "flex", justifyContent: "center" }}>
             <Button variant="text" onClick={handleEditDialogOpen}>
               Edit
             </Button>
@@ -251,7 +252,12 @@ function AssignmentsResult({ mode }) {
           alignItems: "center",
         }}
       >
-        <img src="/src/assets/teams_assignemt.png" height={180} width={180} style={{marginBottom:"10px"}}/>
+        <img
+          src="/src/assets/teams_assignemt.png"
+          height={180}
+          width={180}
+          style={{ marginBottom: "10px" }}
+        />
         <Typography variant="h5" color="textSecondary" textAlign="center">
           There are no assignments to show
         </Typography>

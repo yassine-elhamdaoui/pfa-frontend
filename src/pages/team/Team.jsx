@@ -14,7 +14,7 @@ import {
   ListItemText,
   List,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getTeamById } from "../../services/teamService";
 import BreadCrumb from "../../components/breadCrumb/BreadCrumb";
@@ -27,6 +27,8 @@ import MakePreferencesDialog from "../../components/dialogs/MakePreferencesDialo
 import StarBorderPurple500Icon from "@mui/icons-material/StarBorderPurple500";
 import TeamSkeleton from "./TeamSkeleton";
 import { useTheme } from "@mui/material/styles";
+import { forEach, set } from "lodash";
+import { downLoadProfileImage } from "../../services/userService";
 
 
 const isResponsible = hasRole("ROLE_RESPONSIBLE");
@@ -35,14 +37,17 @@ function Team() {
   const token = localStorage.getItem("token");
   const teamId = localStorage.getItem("team");
   const userId = localStorage.getItem("userId");
+  const [render,setRender]=useState(false);
+  const initialRender = useRef(true);
   const mode = localStorage.getItem("mode");
   const navigate = useNavigate();
   const [team, setTeam] = useState({});
   const [preferences, setPreferences] = useState([]);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [assignment, setAssignment] = useState({})
+  const [assignment, setAssignment] = useState({});
 
+  const [membersImages , setMembersImages] = useState([])
       const [snackbarOpen, setSnackbarOpen] = useState(false);
       const [snackbarMessage, setSnackbarMessage] = useState("");
       const handleSnackbarClose = () => {
@@ -64,23 +69,46 @@ function Team() {
   useEffect(() => {
     const fetchTeam = async () => {
       try {
-        setLoading(true);
+        if (initialRender.current) {
+          setLoading(true);
+        }
         const fetchedTeam = await getTeamById(teamId, token);
-        const fetchedPreferences = await getTeamPreferences(teamId,token);
-        const fetchedProjects = await getAllProjects(token,undefined,undefined,20);
+        const fetchedPreferences = await getTeamPreferences(teamId, token);
+        const fetchedProjects = await getAllProjects(
+          token,
+          undefined,
+          undefined,
+          20
+        );
         const fetchedAssignment = await getAssignment(token);
+        forEach(fetchedTeam.members, async (member) => {
+          console.log(member.firstName);
+          const response = await downLoadProfileImage(member.id, token);
+          console.log(member.firstName);
+          setMembersImages((prev) => [
+            ...prev,
+            {
+              id: member.id,
+              name: member.firstName + " " + member.lastName,
+              url: response,
+            },
+          ]);
+          console.log(member.firstName);
+        });
         setProjects(fetchedProjects);
         setTeam(fetchedTeam);
         setPreferences(fetchedPreferences);
         setAssignment(fetchedAssignment);
-        console.log(fetchedAssignment);
-        console.log(fetchedTeam);
-        console.log(fetchedPreferences);
-        console.log(fetchedProjects);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching team:", error);
-        setLoading(false);
+                if (!initialRender.current) {
+                  setLoading(false);
+                }
+      } finally {
+        if (!initialRender.current) {
+          setLoading(false);
+        }
       }
     };
     if (teamId !== "undefined" && teamId !== "null") {
@@ -89,8 +117,8 @@ function Team() {
       setLoading(false)
 
     }
-  }, []);
-
+  }, [render]);
+console.log(membersImages);
   return loading ? (
     <TeamSkeleton />
   ) : Object.keys(team).length > 0 ? (
@@ -129,9 +157,12 @@ function Team() {
                   sx={{ padding: "0px" }}
                   avatar={
                     <Avatar
-                      {...stringAvatar(
-                        `${member.firstName} ${member.lastName}`
-                      )}
+                      // {...stringAvatar(
+                      //   `${member.firstName} ${member.lastName}`
+                      // )}
+                      src={membersImages.find((image) => image.id === member.id)?.url}
+                      height={40}
+                      width={40}
                     />
                   }
                   title={`${member.firstName} ${member.lastName}`}
@@ -238,7 +269,7 @@ function Team() {
                                   variant="body2"
                                   color="textSecondary"
                                 >
-                                  {project.description}
+                                  {project.description.slice(0, 150)+"..."}
                                 </Typography>
                               }
                             />
@@ -260,7 +291,8 @@ function Team() {
             paddingTop: "30px",
           }}
         >
-          <CommentsDisabledIcon sx={{ fontSize: 150 }} />
+          {/* <CommentsDisabledIcon sx={{ fontSize: 150 }} /> */}
+          <img src="/src/assets/preferences.png" alt="" height={150} />
           <Typography variant="body1" color="textSecondary">
             You haven't make any preferences yet
           </Typography>
@@ -295,6 +327,7 @@ function Team() {
         handleModalClose={handleDialogClose}
         setSnackbarOpen={setSnackbarOpen}
         setSnackbarMessage={setSnackbarMessage}
+        setRender={setRender}
       />
       <Snackbar
         open={snackbarOpen}

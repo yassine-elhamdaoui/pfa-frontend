@@ -5,6 +5,7 @@ export const getJoinRequests = async (token) => {
         },
     });
     const data = await response.json();
+    console.log(data);
     return data;
 }
 

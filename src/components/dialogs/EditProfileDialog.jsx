@@ -1,8 +1,22 @@
 /* eslint-disable react/prop-types */
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, Slide, TextField, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Grid,
+  Slide,
+  Snackbar,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { forwardRef, useState } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import { updateUserById } from "../../services/userService";
+import { hasRole } from "../../utils/userUtiles";
 
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="down" ref={ref} {...props} />;
@@ -12,31 +26,49 @@ function EditProfileDialog({
   handleEditClose,
   setSnackbarOpen,
   setSnackbarMessage,
-  userData
+  userData,
 }) {
-      const token = localStorage.getItem("token");
-        const [formData, setFormData] = useState({
-            firstName: userData.firstName,
-            lastName: userData.lastName,
-            email: userData.email,
-            password: "",
-            inscriptionNumber: userData.inscriptionNumber,
-            cin: userData.cin,
-        });
-        const handleChange = (e) => {
-          const { name, value } = e.target;
-          setFormData({
-            ...formData,
-            [name]: value,
-          });
-        };
+  const isStudent = hasRole("ROLE_STUDENT");
+  const token = localStorage.getItem("token");
+    const [snackbarOpen2, setSnackbarOpen2] = useState(false);
+    const [snackbarMessage2, setSnackbarMessage2] = useState("");
+    const handleSnackbarClose = () => {
+      setSnackbarOpen(false);
+    };
+  const [formData, setFormData] = useState({
+    firstName: userData.firstName,
+    lastName: userData.lastName,
+    password: "",
+    confirmPassword: "",
+    inscriptionNumber: userData.inscriptionNumber,
+    cin: userData.cin,
+  });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
 
-      const handleSubmit = async (e) => {
-        e.preventDefault();
-        const response = await updateUserById(token, userData.id, formData, setSnackbarOpen, setSnackbarMessage);
-        console.log(response);
-        handleEditClose();
-      };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (formData.password !== formData.confirmPassword) {
+      setSnackbarOpen2(true);
+      setSnackbarMessage2("Passwords do not match");
+      return;
+      
+    }
+    const response = await updateUserById(
+      token,
+      userData.id,
+      formData,
+      setSnackbarOpen,
+      setSnackbarMessage
+    );
+    console.log(response);
+    handleEditClose();
+  };
   return (
     <Dialog
       open={openEditDialog}
@@ -87,20 +119,7 @@ function EditProfileDialog({
               label="Last Name"
               type="text"
               fullWidth
-                onChange={handleChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              margin="dense"
-              variant="standard"
-              focused={userData.email ? true : false}
-              value={formData.email}
-              name="email"
-              label="Email"
-              type="email"
-              fullWidth
-                onChange={handleChange}
+              onChange={handleChange}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -111,22 +130,36 @@ function EditProfileDialog({
               label="Password"
               type="password"
               fullWidth
-                onChange={handleChange}
+              onChange={handleChange}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
               margin="dense"
               variant="standard"
-              focused={userData.inscriptionNumber ? true : false}
-              name="inscriptionNumber"
-              value={formData.inscriptionNumber}
-              label="Inscription Number"
-              type="text"
+              name="confirmPassword"
+              label="Confirm-password"
+              type="password"
               fullWidth
-                onChange={handleChange}
+              onChange={handleChange}
+              error={formData.password !== formData.confirmPassword}
             />
           </Grid>
+          {isStudent && (
+            <Grid item xs={12} sm={6}>
+              <TextField
+                margin="dense"
+                variant="standard"
+                focused={userData.inscriptionNumber ? true : false}
+                name="inscriptionNumber"
+                value={formData.inscriptionNumber}
+                label="Inscription Number"
+                type="text"
+                fullWidth
+                onChange={handleChange}
+              />
+            </Grid>
+          )}
           <Grid item xs={12} sm={6}>
             <TextField
               margin="dense"
@@ -137,7 +170,7 @@ function EditProfileDialog({
               type="text"
               value={formData.cin}
               fullWidth
-                onChange={handleChange}
+              onChange={handleChange}
             />
           </Grid>
         </Grid>
@@ -150,8 +183,26 @@ function EditProfileDialog({
           Edit
         </Button>
       </DialogActions>
+      <Snackbar
+        open={snackbarOpen2}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={
+            snackbarMessage2 && snackbarMessage2.includes("success")
+              ? "success"
+              : "error"
+          }
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage2}
+        </Alert>
+      </Snackbar>
     </Dialog>
   );
 }
 
-export default EditProfileDialog
+export default EditProfileDialog;

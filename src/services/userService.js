@@ -49,6 +49,22 @@ const getSupervisors = async (token) => {
     });
   return supervisors;
 };
+
+const getStudents = async (token) => {
+  const students = await fetch("http://localhost:8080/api/users/students", {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  })
+    .then((response) => response.json())
+    .catch((error) => {
+      console.error("Error fetching data:", error);
+      throw error;
+    });
+  return students;
+}
 const downLoadProfileImage = async (userId, token) => {
   try {
     const response = await fetch(
@@ -61,7 +77,7 @@ const downLoadProfileImage = async (userId, token) => {
       }
     );
     if (!response.ok) {
-      throw new Error("Failed to download image");
+      return null;
     }
     const image = await response.blob();
      const url = window.URL.createObjectURL(image);
@@ -69,7 +85,6 @@ const downLoadProfileImage = async (userId, token) => {
     return url;
   } catch (error) {
     console.error("Error downloading image:", error);
-    throw error;
   }
 }
 const updateUserById = async (
@@ -104,4 +119,4 @@ const updateUserById = async (
     throw error;
   }
 };
-export { getUsers , getUserById, updateUserById,getSupervisors, downLoadProfileImage};
+export { getUsers , getUserById, updateUserById,getSupervisors,getStudents, downLoadProfileImage};

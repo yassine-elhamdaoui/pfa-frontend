@@ -47,6 +47,7 @@ function MakePreferencesDialog({
   handleModalClose,
   setSnackbarOpen,
   setSnackbarMessage,
+  setRender
 }) {
   const [selectedProjects, setSelectedProjects] = useState([]);
 console.log(selectedProjects);
@@ -60,6 +61,7 @@ console.log(selectedProjects);
     }, {});
     console.log(ranking);
     makePreferences(token, ranking,setSnackbarOpen,setSnackbarMessage);
+    setRender((prev) => !prev);
     handleModalClose();
   };
 const getFilteredProjects = (index) => {
