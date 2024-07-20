@@ -29,12 +29,12 @@ import {
 } from "../../services/notificationService";
 import { stringAvatar } from "../../utils/generalUtils";
 import { hasRole } from "../../utils/userUtiles";
-import CreateProjectDialog from "../dialogs/CreateProjectDialog";
-import CreateTeamDialog from "../dialogs/CreateTeamDialog";
-import Notifications from "../notification/Notifications";
-import { Search, SearchIconWrapper, StyledInputBase } from "./navBar";
+import CreateProjectDialog from "../dialogs/CreateProjectDialog.jsx";
+import CreateTeamDialog from "../dialogs/CreateTeamDialog.jsx";
+import Notifications from "../notification/Notifications.jsx";
+import { Search, SearchIconWrapper, StyledInputBase } from "./navBar.js";
 import ProfilePopover from "../profilePopover/ProfilePopover"; 
-import { downLoadProfileImage, getUserById } from "../../services/userService";
+import { downLoadProfileImage, getUserById } from "../../services/userService.js";
 import { forEach } from "lodash";
 
 

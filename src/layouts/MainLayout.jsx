@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom";
-import NavBar from "../components/navBar/NavBar";
-import Footer from "../components/footer/Footer";
-import SideBar from "../components/sideBar/SideBar";
+import NavBar from "../components/navBar/NavBar.jsx";
+import Footer from "../components/footer/Footer.jsx";
+import SideBar from "../components/sideBar/SideBar.jsx";
 import { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import { useNavigate } from "react-router-dom";
