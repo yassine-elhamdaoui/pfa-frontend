@@ -43,7 +43,7 @@ import ConfirmationDialog from "../../components/dialogs/ConfirmationDialog";
 import ProjectSkeleton from "./ProjectSkeleton";
 import BreadCrumb from "../../components/breadCrumb/BreadCrumb";
 import { EmojiObjectsOutlined } from "@mui/icons-material";
-import { forEach } from "lodash";
+import { forEach, set } from "lodash";
 
 function Projects() {
   const mode = localStorage.getItem("mode");
@@ -58,7 +58,7 @@ function Projects() {
   const [anchorEl2, setAnchorEl2] = useState(null);
   const open = Boolean(anchorEl);
   const [page, setPage] = useState(1);
-  const [yearSelected, setyearSelected] = useState("2023/2024");
+  const [yearSelected, setyearSelected] = useState(undefined);
   const [selectedProject, setSelectedProject] = useState(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
@@ -132,7 +132,15 @@ function Projects() {
     const fetchYears = async () => {
       try {
         const Years = await getAcademicYear(token);
-
+        let currentYear = "";
+        const year = new Date().getFullYear();
+        const month = new Date().getMonth();
+        if (month >= 9 && month <= 12) {
+          currentYear = `${year}/${year + 1}`;
+        } else if (month >= 1 && month <= 7) {
+          currentYear = `${year - 1}/${year}`;
+        }
+        setyearSelected(currentYear);
         setYears(Years);
       } catch (err) {
         console.error("Error fetching Users And Projects", err);

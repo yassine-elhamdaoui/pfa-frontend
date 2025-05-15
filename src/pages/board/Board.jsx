@@ -386,31 +386,47 @@ function Board() {
               </div>
             )
           ) : (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                paddingTop: "60px",
-                alignItems: "center",
-              }}
-            >
-              <img src="/src/assets/document.png" height={200} width={200} />
-              <Typography variant="h5" color="textSecondary" textAlign="center">
-                No project found
-              </Typography>
-              <Typography
-                variant="body2"
-                color="textSecondary"
-                textAlign="center"
+            <>
+              <BreadCrumb
+                items={[
+                  { label: "Home", url: "/" },
+                  { label: "Board", url: "/board" },
+                ]}
+              />
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  paddingTop: "60px",
+                  alignItems: "center",
+                }}
               >
-                {Object.keys(user).length > 0 &&
-                user.authorities.find(
-                  (auth) => auth.authority === "ROLE_SUPERVISOR"
-                ) !== undefined
-                  ? "This team still don't have a project assigned to it"
-                  : "Wait until you're assigned to a project"}
-              </Typography>
-            </div>
+                <img
+                  src="/src/assets/no-project.png"
+                  height={200}
+                  width={200}
+                />
+                <Typography
+                  variant="h5"
+                  color="textSecondary"
+                  textAlign="center"
+                >
+                  No project found
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="textSecondary"
+                  textAlign="center"
+                >
+                  {Object.keys(user).length > 0 &&
+                  user.authorities.find(
+                    (auth) => auth.authority === "ROLE_SUPERVISOR"
+                  ) !== undefined
+                    ? "This team still don't have a project assigned to it"
+                    : "Wait until you're assigned to a project"}
+                </Typography>
+              </div>
+            </>
           )
         ) : (
           <div

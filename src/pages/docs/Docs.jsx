@@ -846,27 +846,36 @@ function Docs() {
         </Snackbar>
       </Box>
     ) : (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          paddingTop: "60px",
-          alignItems: "center",
-        }}
-      >
-        <img src="/src/assets/document.png" height={200} width={200} />
-        <Typography variant="h5" color="textSecondary" textAlign="center">
-          No project found
-        </Typography>
-        <Typography variant="body2" color="textSecondary" textAlign="center">
-          {Object.keys(user).length > 0 &&
-          user.authorities.find(
-            (auth) => auth.authority === "ROLE_SUPERVISOR"
-          ) !== undefined
-            ? "This team still don't have a project assigned to it"
-            : "Wait until you're assigned to a project"}
-        </Typography>
-      </div>
+      <>
+        <BreadCrumb
+          items={[
+            { label: "Home", href: "/" },
+            { label: "Dashboard", href: "/" },
+            { label: "Docs", href: "/docs" },
+          ]}
+        />
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            paddingTop: "60px",
+            alignItems: "center",
+          }}
+        >
+          <img src="/src/assets/no-project.png" height={200} width={200} />
+          <Typography variant="h5" color="textSecondary" textAlign="center">
+            No project found
+          </Typography>
+          <Typography variant="body2" color="textSecondary" textAlign="center">
+            {Object.keys(user).length > 0 &&
+            user.authorities.find(
+              (auth) => auth.authority === "ROLE_SUPERVISOR"
+            ) !== undefined
+              ? "This team still don't have a project assigned to it"
+              : "Wait until you're assigned to a project"}
+          </Typography>
+        </div>
+      </>
     ))
   ) : (
     <div

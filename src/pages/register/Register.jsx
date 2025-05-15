@@ -61,7 +61,7 @@ export default function Register() {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "ROLE_STUDENT",
+    role: "",
     branch: "1",
     image: null,
   });
@@ -110,14 +110,21 @@ export default function Register() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
+    console.log(data);
+    
     for (const key in data) {
       if (data[key] === "") {
+        if (key === "inscriptionNumber" && data["role"] === "ROLE_SUPERVISOR") {
+          continue; // Skip validation for inscriptionNumber if role is supervisor
+        }
+
         setSnackbarMessage("Please fill all fields");
         setSnackbarOpen(true);
         setLoading(false);
         return;
       }
     }
+
     const formData = new FormData();
     for (const key in data) {
       formData.append(key, data[key]);
